@@ -16,6 +16,8 @@ pydantic-settings = "^2.6.1"
 pyjwt = "^2.10.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 asyncpg = "^0.30.0"
+pytest = "^8.3.3"
+ruff = "^0.8.0"
 
 
 [build-system]
