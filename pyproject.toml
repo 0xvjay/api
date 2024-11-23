@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Vijay Modi <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["standard"], version = "^0.115.5"}
+uvloop = {version = "0.21.0", markers = "sys_platform != 'win32'"}
+httptools = "^0.6.4"
+alembic = "^1.14.0"
+sqlalchemy = "^2.0.36"
+pydantic-settings = "^2.6.1"
+pyjwt = "^2.10.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+asyncpg = "^0.30.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

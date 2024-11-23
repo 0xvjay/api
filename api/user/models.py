@@ -1,0 +1,16 @@
+from api.models import BaseTimeStamp
+from sqlalchemy import Column, String, Boolean, DateTime
+
+
+class User(BaseTimeStamp):
+    __tablename__ = "user_user"
+
+    username = Column(String(100), unique=True, index=True)
+    email = Column(String(100), nullable=False, unique=True, index=True)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
+    password = Column(String(128), nullable=False)
+    last_login = Column(DateTime(timezone=True))
+    is_active = Column(Boolean, default=True)
+
+    is_superuser = Column(Boolean, default=False)
