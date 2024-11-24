@@ -7,3 +7,7 @@ class InactiveUser(BadRequest):
 
 class GroupNotFound(NotFound):
     detail = "Group not found"
+
+
+class GroupExists(BadRequest):
+    detail = "Group name already exists"

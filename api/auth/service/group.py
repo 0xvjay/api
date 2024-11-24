@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import UUID4
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +15,7 @@ async def retrieve(db_session: AsyncSession, id: UUID4) -> Group:
 async def get(
     db_session: AsyncSession,
     query_str: str | None = None,
-    order_by: List[str] = None,
+    order_by: str | None = None,
 ):
     query = select(Group)
 
@@ -37,6 +35,11 @@ async def get(
 
     result = await db_session.execute(query)
     return result.scalars().all()
+
+
+async def get_by_name(db_session: AsyncSession, name: str) -> Group | None:
+    result = await db_session.execute(select(Group).where(Group.name == name))
+    return result.scalar_one_or_none()
 
 
 async def create(db_session: AsyncSession, group: GroupCreateSchema) -> Group:
