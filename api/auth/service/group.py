@@ -1,22 +1,23 @@
+from typing import List
+
 from pydantic import UUID4
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..exceptions import GroupNotFound
-from ..models import Group
+from ..models import Group, Permission
 from ..schemas import GroupCreateSchema, GroupUpdateSchema
 
 
-async def retrieve(db_session: AsyncSession, id: UUID4) -> Group:
+async def retrieve(db_session: AsyncSession, id: UUID4) -> Group | None:
     result = await db_session.execute(select(Group).where(Group.id == id))
-    return result.scalar_one_or_none()
+    return result.unique().scalar_one_or_none()
 
 
 async def get(
     db_session: AsyncSession,
     query_str: str | None = None,
     order_by: str | None = None,
-):
+) -> List[Group]:
     query = select(Group)
 
     if query_str:
@@ -26,7 +27,8 @@ async def get(
 
     if order_by:
         order_criteria = []
-        for field in order_by:
+        fields = [field.strip() for field in order_by.split(",")]
+        for field in fields:
             if field.startswith("-"):
                 order_criteria.append(desc(getattr(Group, field[1:])))
             else:
@@ -34,42 +36,67 @@ async def get(
         query = query.order_by(*order_criteria)
 
     result = await db_session.execute(query)
-    return result.scalars().all()
+    return result.unique().scalars().all()
 
 
 async def get_by_name(db_session: AsyncSession, name: str) -> Group | None:
     result = await db_session.execute(select(Group).where(Group.name == name))
-    return result.scalar_one_or_none()
+    return result.unique().scalar_one_or_none()
 
 
 async def create(db_session: AsyncSession, group: GroupCreateSchema) -> Group:
-    obj_data = Group(**group.model_dump())
-    db_session.add(obj_data)
+    db_group = Group(**group.model_dump(exclude={"permissions"}))
+    if group.permissions:
+        db_group.permissions.clear()
+
+        permission_ids = [permission.id for permission in group.permissions]
+
+        permissions_result = await db_session.execute(
+            select(Permission).where(Permission.id.in_(permission_ids))
+        )
+        permissions = permissions_result.scalars().all()
+        db_group.permissions.extend(permissions)
+
+    db_session.add(db_group)
     await db_session.commit()
-    await db_session.refresh(obj_data)
-    return obj_data
+    await db_session.refresh(db_group)
+    return db_group
 
 
-async def update(db_session: AsyncSession, group: GroupUpdateSchema) -> Group:
-    result = await db_session.execute(select(Group).where(Group.id == group.id))
-    obj_data = result.scalar_one_or_none()
+async def update(
+    db_session: AsyncSession, group: GroupUpdateSchema, group_id: UUID4
+) -> Group | None:
+    result = await db_session.execute(select(Group).where(Group.id == group_id))
+    db_group = result.unique().scalar_one_or_none()
 
-    if obj_data is None:
-        raise GroupNotFound()
+    if db_group is None:
+        return
 
-    for key, value in group.model_dump().items():
-        setattr(obj_data, key, value)
+    for key, value in group.model_dump(exclude={"permissions"}).items():
+        setattr(db_group, key, value)
+
+    if group.permissions:
+        db_group.permissions.clear()
+
+        permission_ids = [permission.id for permission in group.permissions]
+
+        permissions_result = await db_session.execute(
+            select(Permission).where(Permission.id.in_(permission_ids))
+        )
+        permissions = permissions_result.scalars().all()
+        db_group.permissions.extend(permissions)
 
     await db_session.commit()
-    await db_session.refresh(obj_data)
-    return obj_data
+    await db_session.refresh(db_group)
+    return db_group
 
 
-async def delete(db_session: AsyncSession, id: UUID4) -> None:
+async def delete(db_session: AsyncSession, id: UUID4) -> bool:
     result = await db_session.execute(select(Group).where(Group.id == id))
-    db_group = result.scalar_one_or_none()
+    db_group = result.unique().scalar_one_or_none()
 
     if db_group:
         await db_session.delete(db_group)
         await db_session.commit()
-    return
+        return True
+    return False

@@ -1,5 +1,6 @@
 from api.models import BaseTimeStamp
 from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
 
 
 class User(BaseTimeStamp):
@@ -14,3 +15,7 @@ class User(BaseTimeStamp):
     is_active = Column(Boolean, default=True)
 
     is_superuser = Column(Boolean, default=False)
+
+    groups = relationship(
+        "Group", secondary="auth_user_group", back_populates="users", lazy="joined"
+    )

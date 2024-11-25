@@ -1,4 +1,4 @@
-from api.exceptions import NotFound, BadRequest
+from api.exceptions import BadRequest, NotFound
 
 
 class InactiveUser(BadRequest):

@@ -25,20 +25,20 @@ class BaseGroupSchema(BaseModel):
 
 
 class GroupCreateSchema(BaseGroupSchema):
-    pass
+    permissions: List["PermissionOutMinimalSchema"] = []
 
 
-class GroupUpdateSchema(BaseGroupSchema):
+class GroupUpdateSchema(GroupCreateSchema):
     id: UUID4
 
 
-class GroupOutMinimalSchema(GroupUpdateSchema):
-    pass
+class GroupOutMinimalSchema(BaseGroupSchema):
+    id: UUID4
 
 
 class GroupOutSchema(GroupOutMinimalSchema):
     created_at: datetime
-    updated_at: datetime
+    updated_at: datetime | None = None
 
     permissions: List["PermissionOutMinimalSchema"]
 

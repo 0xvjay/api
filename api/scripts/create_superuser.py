@@ -1,14 +1,14 @@
+import asyncio
 from datetime import datetime
 from typing import Optional
 
 import typer
-import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from api.auth.utils import get_password_hash
-from api.user.models import User
 from api.database import AsyncSessionLocal
+from api.user.models import User
 
 cli = typer.Typer()
 

@@ -1,17 +1,30 @@
-from enum import StrEnum
+import uuid
 
 from sqlalchemy import UUID, Boolean, Column, ForeignKey, String, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
 from api.models import BaseTimeStamp, BaseUUID
+from api.user.models import User  # noqa: F401
+
+from .constant import PermissionAction
 
 
-class PermissionAction(StrEnum):
-    CREATE = "CREATE"
-    READ = "READ"
-    UPDATE = "UPDATE"
-    DELETE = "DELETE"
+class UserGroup(BaseUUID):
+    __tablename__ = "auth_user_group"
+
+    group_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("auth_group.id", ondelete="CASCADE"),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("user_user.id", ondelete="CASCADE"),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
 
 
 class GroupPermission(BaseUUID):
@@ -21,18 +34,19 @@ class GroupPermission(BaseUUID):
         UUID(as_uuid=True),
         ForeignKey("auth_group.id", ondelete="CASCADE"),
         primary_key=True,
+        default=uuid.uuid4,
     )
     permission_id = Column(
         UUID(as_uuid=True),
         ForeignKey("auth_permission.id", ondelete="CASCADE"),
         primary_key=True,
+        default=uuid.uuid4,
     )
 
 
 class Group(BaseTimeStamp):
     __tablename__ = "auth_group"
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False, unique=True, index=True)
     description = Column(Text)
     is_active = Column(Boolean, default=True, nullable=False)
@@ -40,15 +54,15 @@ class Group(BaseTimeStamp):
     permissions = relationship(
         "Permission",
         secondary="auth_group_permission",
-        backref="groups",
-        viewonly=True,
+        back_populates="groups",
+        lazy="joined",
     )
+    users = relationship("User", secondary="auth_user_group", back_populates="groups")
 
 
 class Permission(BaseTimeStamp):
     __tablename__ = "auth_permission"
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False, unique=True, index=True)
     description = Column(Text)
     action = Column(SQLEnum(PermissionAction), nullable=False)
@@ -57,6 +71,5 @@ class Permission(BaseTimeStamp):
     groups = relationship(
         "Group",
         secondary="auth_group_permission",
-        backref="permissions",
-        viewonly=True,
+        back_populates="permissions",
     )

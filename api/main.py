@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from api.auth.router import router as auth_router
+from api.user.router import router as user_router
 from api.config import settings
 
 logging.config.dictConfig(settings.LOGGING_CONFIG)
@@ -34,6 +35,7 @@ def health():
 
 
 app.include_router(auth_router)
+app.include_router(user_router)
 
 if __name__ == "__main__":
     uvicorn_config = {
