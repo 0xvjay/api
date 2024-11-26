@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy import UUID, Boolean, Column, ForeignKey, String, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
@@ -17,13 +15,11 @@ class UserGroup(BaseUUID):
         UUID(as_uuid=True),
         ForeignKey("auth_group.id", ondelete="CASCADE"),
         primary_key=True,
-        default=uuid.uuid4,
     )
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("user_user.id", ondelete="CASCADE"),
         primary_key=True,
-        default=uuid.uuid4,
     )
 
 
@@ -34,13 +30,11 @@ class GroupPermission(BaseUUID):
         UUID(as_uuid=True),
         ForeignKey("auth_group.id", ondelete="CASCADE"),
         primary_key=True,
-        default=uuid.uuid4,
     )
     permission_id = Column(
         UUID(as_uuid=True),
         ForeignKey("auth_permission.id", ondelete="CASCADE"),
         primary_key=True,
-        default=uuid.uuid4,
     )
 
 
