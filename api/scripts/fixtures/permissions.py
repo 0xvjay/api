@@ -35,6 +35,34 @@ permissions = [
         "action": "DELETE",
         "object": "group",
     },
+    {
+        "id": uuid.uuid4(),
+        "name": "create user",
+        "description": "create user",
+        "action": "CREATE",
+        "object": "user",
+    },
+    {
+        "id": uuid.uuid4(),
+        "name": "read user",
+        "description": "read user",
+        "action": "READ",
+        "object": "user",
+    },
+    {
+        "id": uuid.uuid4(),
+        "name": "update user",
+        "description": "update user",
+        "action": "UPDATE",
+        "object": "user",
+    },
+    {
+        "id": uuid.uuid4(),
+        "name": "delete user",
+        "description": "delete user",
+        "action": "DELETE",
+        "object": "user",
+    },
 ]
 
 

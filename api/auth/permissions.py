@@ -85,3 +85,101 @@ class GroupReadPermission(ObjectPermission):
             db_session=db_session,
             current_user=current_user,
         )
+
+
+class GroupCreatePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.CREATE,
+            PermissionObject.GROUP,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class GroupUpdatePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.UPDATE,
+            PermissionObject.GROUP,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class GroupDeletePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.DELETE,
+            PermissionObject.GROUP,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class UserReadPermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.READ,
+            PermissionObject.USER,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class UserCreatePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.CREATE,
+            PermissionObject.USER,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class UserUpdatePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.UPDATE,
+            PermissionObject.USER,
+            db_session=db_session,
+            current_user=current_user,
+        )
+
+
+class UserDeletePermission(ObjectPermission):
+    def __init__(
+        self,
+        db_session=Depends(get_db),
+        current_user=Depends(get_current_active_user),
+    ):
+        super().__init__(
+            PermissionAction.DELETE,
+            PermissionObject.USER,
+            db_session=db_session,
+            current_user=current_user,
+        )
