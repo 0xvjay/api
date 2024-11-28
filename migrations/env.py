@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from api.auth import models as auth_models  # noqa: F401
+from api.catalogue import models as catalogue_models  # noqa: F401
 from api.config import db_settings
 from api.database import Base
 from api.user import models as user_models  # noqa: F401

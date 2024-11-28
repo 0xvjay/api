@@ -69,14 +69,16 @@ async def read_user(db_session: DBSession, user_id: UUID4):
 @router.put("/{user_id}", response_model=UserOutMinimalSchema)
 async def edit_user(db_session: DBSession, user: UserUpdateSchema, user_id: UUID4):
     try:
-        db_obj = await get_by_email_or_username(
-            db_session=db_session, email=user.email, username=user.username
-        )
+        db_user = await retrieve(db_session=db_session, id=user_id)
+        if db_user is None:
+            raise UserNotFound()
+        if db_user.email != user.email or db_user.username != user.username:
+            db_obj = await get_by_email_or_username(
+                db_session=db_session, email=user.email, username=user.username
+            )
         if db_obj is not None and user.id != user_id:
             raise UserEmailOrNameExists()
-        result = await update(db_session=db_session, user=user, user_id=user_id)
-        if result is None:
-            raise UserNotFound()
+        result = await update(db_session=db_session, user=user, db_user=db_user)
         return result
     except (UserEmailOrNameExists, UserNotFound):
         raise
@@ -88,10 +90,11 @@ async def edit_user(db_session: DBSession, user: UserUpdateSchema, user_id: UUID
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_user(db_session: DBSession, user_id: UUID4):
     try:
-        result = await delete(db_session=db_session, id=user_id)
-        if not result:
+        db_user = await retrieve(db_session=db_session, id=user_id)
+        if db_user is None:
             raise UserNotFound()
-        return {"message": "User successfully deleted"}
+        await delete(db_session=db_session, id=user_id)
+        return
     except UserNotFound:
         raise
     except Exception as e:

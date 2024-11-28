@@ -85,14 +85,8 @@ async def create(db_session: AsyncSession, user: UserCreateSchema) -> User:
 
 
 async def update(
-    db_session: AsyncSession, user: UserUpdateSchema, user_id: UUID4
-) -> User | None:
-    result = await db_session.execute(select(User).where(User.id == user_id))
-    db_user = result.unique().scalar_one_or_none()
-
-    if db_user is None:
-        return
-
+    db_session: AsyncSession, user: UserUpdateSchema, db_user: User
+) -> User:
     for key, value in user.model_dump(exclude={"groups"}).items():
         setattr(db_user, key, value)
 
@@ -112,12 +106,7 @@ async def update(
     return db_user
 
 
-async def delete(db_session: AsyncSession, id: UUID4) -> bool:
-    result = await db_session.execute(select(User).where(User.id == id))
-    db_user = result.unique().scalar_one_or_none()
-
-    if db_user:
-        await db_session.delete(db_user)
-        await db_session.commit()
-        return True
-    return False
+async def delete(db_session: AsyncSession, db_user: User) -> None:
+    await db_session.delete(db_user)
+    await db_session.commit()
+    return

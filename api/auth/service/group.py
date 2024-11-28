@@ -64,14 +64,8 @@ async def create(db_session: AsyncSession, group: GroupCreateSchema) -> Group:
 
 
 async def update(
-    db_session: AsyncSession, group: GroupUpdateSchema, group_id: UUID4
-) -> Group | None:
-    result = await db_session.execute(select(Group).where(Group.id == group_id))
-    db_group = result.unique().scalar_one_or_none()
-
-    if db_group is None:
-        return
-
+    db_session: AsyncSession, group: GroupUpdateSchema, db_group: Group
+) -> Group:
     for key, value in group.model_dump(exclude={"permissions"}).items():
         setattr(db_group, key, value)
 
@@ -91,12 +85,7 @@ async def update(
     return db_group
 
 
-async def delete(db_session: AsyncSession, id: UUID4) -> bool:
-    result = await db_session.execute(select(Group).where(Group.id == id))
-    db_group = result.unique().scalar_one_or_none()
-
-    if db_group:
-        await db_session.delete(db_group)
-        await db_session.commit()
-        return True
-    return False
+async def delete(db_session: AsyncSession, db_group: Group) -> None:
+    await db_session.delete(db_group)
+    await db_session.commit()
+    return

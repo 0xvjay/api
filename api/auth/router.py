@@ -126,15 +126,19 @@ async def add_group(db_session: DBSession, group: GroupCreateSchema):
 @router.put("/groups/{group_id}", response_model=GroupOutMinimalSchema)
 async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: UUID4):
     try:
-        db_obj = await get_group_by_name(db_session=db_session, name=group.name)
-        if db_obj is not None and group.id != group_id:
-            raise GroupExists()
-        result = await update_group(
-            db_session=db_session, group=group, group_id=group_id
-        )
-        if result is None:
+        db_group = await retrieve_group(db_session=db_session, id=group_id)
+        if db_group is None:
             raise GroupNotFound()
-        return result
+        if db_group != group.name:
+            existing_group = await get_group_by_name(
+                db_session=db_session, name=group.name
+            )
+            if existing_group is not None and existing_group.id != group_id:
+                raise GroupExists()
+        updated_group = await update_group(
+            db_session=db_session, group=group, db_group=db_group
+        )
+        return updated_group
     except (GroupExists, GroupNotFound):
         raise
     except Exception as e:
@@ -145,10 +149,11 @@ async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: 
 @router.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_group(db_session: DBSession, group_id: UUID4):
     try:
-        result = await delete_group(db_session=db_session, id=group_id)
-        if not result:
+        db_group = await retrieve_group(db_session=db_session, id=group_id)
+        if db_group is None:
             raise GroupNotFound()
-        return {"message": "Group successfully deleted"}
+        await delete_group(db_session=db_session, db_group=db_group)
+        return
     except GroupNotFound:
         raise
     except Exception as e:
