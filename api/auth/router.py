@@ -20,25 +20,7 @@ from .schemas import (
     PermissionOutMinimalSchema,
     TokenSchema,
 )
-from .service.group import (
-    create as create_group,
-)
-from .service.group import (
-    delete as delete_group,
-)
-from .service.group import (
-    get as get_groups,
-)
-from .service.group import (
-    get_by_name as get_group_by_name,
-)
-from .service.group import (
-    retrieve as retrieve_group,
-)
-from .service.group import (
-    update as update_group,
-)
-from .service.permission import get as get_permissions
+from .service import get_permissions, group_crud
 from .utils import authenticate_user, create_access_token, create_refresh_token
 
 router = APIRouter()
@@ -81,7 +63,7 @@ async def read_groups(
     order_by: str | None = None,
 ):
     try:
-        result = await get_groups(
+        result = await group_crud.list(
             db_session=db_session, query_str=query_str, order_by=order_by
         )
         return result
@@ -93,7 +75,7 @@ async def read_groups(
 @router.get("/groups/{group_id}", response_model=GroupOutSchema)
 async def read_group(db_session: DBSession, group_id: UUID4):
     try:
-        result = await retrieve_group(db_session=db_session, id=group_id)
+        result = await group_crud.get(db_session=db_session, id=group_id)
         if result is None:
             raise GroupNotFound()
         return result
@@ -111,10 +93,10 @@ async def read_group(db_session: DBSession, group_id: UUID4):
 )
 async def add_group(db_session: DBSession, group: GroupCreateSchema):
     try:
-        db_obj = await get_group_by_name(db_session=db_session, name=group.name)
+        db_obj = await group_crud.get_by_name(db_session=db_session, name=group.name)
         if db_obj is not None:
             raise GroupExists()
-        result = await create_group(db_session=db_session, group=group)
+        result = await group_crud.create(db_session=db_session, group=group)
         return result
     except GroupExists:
         raise
@@ -126,16 +108,16 @@ async def add_group(db_session: DBSession, group: GroupCreateSchema):
 @router.put("/groups/{group_id}", response_model=GroupOutMinimalSchema)
 async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: UUID4):
     try:
-        db_group = await retrieve_group(db_session=db_session, id=group_id)
+        db_group = await group_crud.get(db_session=db_session, id=group_id)
         if db_group is None:
             raise GroupNotFound()
         if db_group != group.name:
-            existing_group = await get_group_by_name(
+            existing_group = await group_crud.get_by_name(
                 db_session=db_session, name=group.name
             )
             if existing_group is not None and existing_group.id != group_id:
                 raise GroupExists()
-        updated_group = await update_group(
+        updated_group = await group_crud.update(
             db_session=db_session, group=group, db_group=db_group
         )
         return updated_group
@@ -149,10 +131,10 @@ async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: 
 @router.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_group(db_session: DBSession, group_id: UUID4):
     try:
-        db_group = await retrieve_group(db_session=db_session, id=group_id)
+        db_group = await group_crud.get(db_session=db_session, id=group_id)
         if db_group is None:
             raise GroupNotFound()
-        await delete_group(db_session=db_session, db_group=db_group)
+        await group_crud.delete(db_session=db_session, db_obj=db_group)
         return
     except GroupNotFound:
         raise

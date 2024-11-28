@@ -6,10 +6,12 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from api.address import models as address_models  # noqa: F401
 from api.auth import models as auth_models  # noqa: F401
 from api.catalogue import models as catalogue_models  # noqa: F401
 from api.config import db_settings
 from api.database import Base
+from api.order import models as order_models  # noqa: F401
 from api.user import models as user_models  # noqa: F401
 
 # this is the Alembic Config object, which provides

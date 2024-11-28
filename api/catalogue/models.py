@@ -60,6 +60,7 @@ class Product(BaseTimeStamp):
         back_populates="products",
         lazy="joined",
     )
+    lines = relationship("Line", backref="product")
 
     def __init__(self, *args, **kwargs):
         if "slug" not in kwargs:

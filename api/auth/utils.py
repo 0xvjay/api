@@ -11,8 +11,7 @@ from pydantic import UUID4
 from api.config import settings
 from api.database import DBSession
 from api.exceptions import NotAuthenticated
-from api.user.service import get_by_email_or_username as get_user_by_email_or_username
-from api.user.service import retrieve as retrieve_user
+from api.user.service import user_crud
 
 from .schemas import JWTSchema
 
@@ -57,7 +56,7 @@ def create_refresh_token(subject: str | Any, expires_delta: int = None) -> str:
 
 
 async def authenticate_user(db_session: DBSession, email: str, password: str):
-    user = await get_user_by_email_or_username(db_session=db_session, email=email)
+    user = await user_crud.get_by_email_or_username(db_session=db_session, email=email)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -77,7 +76,7 @@ async def get_current_user(db_session: DBSession, token: str = Depends(oauth2_sc
         token_data = JWTSchema(id=user_id)
     except InvalidTokenError:
         raise NotAuthenticated()
-    user = await retrieve_user(db_session=db_session, id=token_data.id)
+    user = await user_crud.get(db_session=db_session, id=token_data.id)
     if user is None:
         raise NotAuthenticated()
     return user

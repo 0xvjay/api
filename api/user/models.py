@@ -1,6 +1,7 @@
 from api.models import BaseTimeStamp
 from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
+from api.order.models import Order  # noqa: F401
 
 
 class User(BaseTimeStamp):
@@ -19,3 +20,5 @@ class User(BaseTimeStamp):
     groups = relationship(
         "Group", secondary="auth_user_group", back_populates="users", lazy="joined"
     )
+    orders = relationship("Order", backref="user")
+    addresses = relationship("UserAddress", backref="user")

@@ -7,3 +7,7 @@ class UserNotFound(NotFound):
 
 class UserEmailOrNameExists(BadRequest):
     detail = "User with email or username already exists"
+
+
+class UserAddressNotFound(NotFound):
+    detail = "User address not found"

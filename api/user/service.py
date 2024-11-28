@@ -4,109 +4,160 @@ from pydantic import UUID4, EmailStr
 from sqlalchemy import desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.address.models import UserAddress
 from api.auth.models import Group
+from api.service import CRUDBase
 
 from .models import User
-from .schemas import UserCreateSchema, UserUpdateSchema
+from .schemas import (
+    UserAddressCreateSchema,
+    UserAddressUpdateSchema,
+    UserCreateSchema,
+    UserUpdateSchema,
+)
 
 
-async def get(
-    db_session: AsyncSession,
-    query_str: str | None = None,
-    order_by: str | None = None,
-) -> List[User]:
-    query = select(User)
+class CRUDUser(CRUDBase[User, UserCreateSchema, UserUpdateSchema]):
+    async def list(
+        self,
+        db_session: AsyncSession,
+        query_str: str | None = None,
+        order_by: str | None = None,
+    ) -> List[User]:
+        query = select(User)
 
-    if query_str:
-        query = query.where(
-            (
-                User.username.contains(query_str)
-                | User.email.contains(query_str)
-                | User.first_name.contains(query_str)
-                | User.last_name.contains(query_str)
+        if query_str:
+            query = query.where(
+                (
+                    User.username.contains(query_str)
+                    | User.email.contains(query_str)
+                    | User.first_name.contains(query_str)
+                    | User.last_name.contains(query_str)
+                )
+            )
+
+        if order_by:
+            order_criteria = []
+            fields = [field.strip() for field in order_by.split(",")]
+            for field in fields:
+                if field.startswith("-"):
+                    order_criteria.append(desc(getattr(User, field[1:])))
+                else:
+                    order_criteria.append(getattr(User, field))
+            query = query.order_by(*order_criteria)
+
+        result = await db_session.execute(query)
+        return result.unique().scalars().all()
+
+    async def get_by_email_or_username(
+        self,
+        db_session: AsyncSession,
+        email: EmailStr | None = None,
+        username: str | None = None,
+    ) -> User | None:
+        if not email and not username:
+            raise ValueError("Either email or username must be provided")
+        query = select(User)
+        conditions = []
+
+        if email:
+            conditions.append(User.email == email)
+        if username:
+            conditions.append(User.username == username)
+
+        query = query.where(or_(*conditions))
+
+        result = await db_session.execute(query)
+        return result.unique().scalar_one_or_none()
+
+    async def create(self, db_session: AsyncSession, user: UserCreateSchema) -> User:
+        db_user = User(**user.model_dump(exclude={"groups"}))
+        if user.groups:
+            db_user.groups.clear()
+
+            group_ids = [group.id for group in user.groups]
+
+            groups_result = await db_session.execute(
+                select(Group).where(Group.id.in_(group_ids))
+            )
+            groups = groups_result.unique().scalars().all()
+            db_user.groups.extend(groups)
+
+        db_session.add(db_user)
+        await db_session.commit()
+        await db_session.refresh(db_user)
+        return db_user
+
+    async def update(
+        self, db_session: AsyncSession, db_user: User, user: UserUpdateSchema
+    ) -> User:
+        for key, value in user.model_dump(exclude={"groups"}).items():
+            setattr(db_user, key, value)
+
+        if user.groups:
+            db_user.groups.clear()
+
+            group_ids = [group.id for group in user.groups]
+
+            groups_result = await db_session.execute(
+                select(Group).where(Group.id.in_(group_ids))
+            )
+            groups = groups_result.unique().scalars().all()
+            db_user.groups.extend(groups)
+
+        await db_session.commit()
+        await db_session.refresh(db_user)
+        return db_user
+
+
+class CRUDUserAddress(
+    CRUDBase[UserAddress, UserAddressCreateSchema, UserAddressUpdateSchema]
+):
+    async def list(
+        self,
+        db_session: AsyncSession,
+        user_id: UUID4,
+        query_str: str | None = None,
+        order_by: str | None = None,
+    ) -> List[UserAddress]:
+        query = select(UserAddress).where(UserAddress.user_id == user_id)
+
+        if query_str:
+            pass
+
+        if order_by:
+            order_criteria = []
+            fields = [field.strip() for field in order_by.split(",")]
+            for field in fields:
+                if field.startswith("-"):
+                    order_criteria.append(desc(getattr(self.model, field[1:])))
+                else:
+                    order_criteria.append(getattr(self.model, field))
+            query = query.order_by(*order_criteria)
+
+        result = await db_session.execute(query)
+        return result.unique().scalars().all()
+
+    async def get(
+        self, db_session: AsyncSession, id: UUID4, user_id: UUID4
+    ) -> UserAddress | None:
+        result = await db_session.execute(
+            select(UserAddress).where(
+                UserAddress.user_id == user_id, UserAddress.id == id
             )
         )
+        return result.unique().scalar_one_or_none()
 
-    if order_by:
-        order_criteria = []
-        fields = [field.strip() for field in order_by.split(",")]
-        for field in fields:
-            if field.startswith("-"):
-                order_criteria.append(desc(getattr(User, field[1:])))
-            else:
-                order_criteria.append(getattr(User, field))
-        query = query.order_by(*order_criteria)
+    async def create(
+        self, db_session: AsyncSession, schema: UserAddressCreateSchema, user_id: UUID4
+    ) -> UserAddress:
+        db_obj = UserAddress(**schema.model_dump(), user_id=user_id)
+        db_session.add(db_obj)
+        await db_session.commit()
+        await db_session.refresh(db_obj)
 
-    result = await db_session.execute(query)
-    return result.unique().scalars().all()
+        return db_obj
 
 
-async def retrieve(db_session: AsyncSession, id: UUID4) -> User | None:
-    result = await db_session.execute(select(User).where(User.id == id))
-    return result.unique().scalar_one_or_none()
-
-
-async def get_by_email_or_username(
-    db_session: AsyncSession, email: EmailStr | None = None, username: str | None = None
-) -> User | None:
-    if not email and not username:
-        raise ValueError("Either email or username must be provided")
-    query = select(User)
-    conditions = []
-
-    if email:
-        conditions.append(User.email == email)
-    if username:
-        conditions.append(User.username == username)
-
-    query = query.where(or_(*conditions))
-
-    result = await db_session.execute(query)
-    return result.unique().scalar_one_or_none()
-
-
-async def create(db_session: AsyncSession, user: UserCreateSchema) -> User:
-    db_user = User(**user.model_dump(exclude={"groups"}))
-    if user.groups:
-        db_user.groups.clear()
-
-        group_ids = [group.id for group in user.groups]
-
-        groups_result = await db_session.execute(
-            select(Group).where(Group.id.in_(group_ids))
-        )
-        groups = groups_result.unique().scalars().all()
-        db_user.groups.extend(groups)
-
-    db_session.add(db_user)
-    await db_session.commit()
-    await db_session.refresh(db_user)
-    return db_user
-
-
-async def update(
-    db_session: AsyncSession, user: UserUpdateSchema, db_user: User
-) -> User:
-    for key, value in user.model_dump(exclude={"groups"}).items():
-        setattr(db_user, key, value)
-
-    if user.groups:
-        db_user.groups.clear()
-
-        group_ids = [group.id for group in user.groups]
-
-        groups_result = await db_session.execute(
-            select(Group).where(Group.id.in_(group_ids))
-        )
-        groups = groups_result.unique().scalars().all()
-        db_user.groups.extend(groups)
-
-    await db_session.commit()
-    await db_session.refresh(db_user)
-    return db_user
-
-
-async def delete(db_session: AsyncSession, db_user: User) -> None:
-    await db_session.delete(db_user)
-    await db_session.commit()
-    return
+user_crud = CRUDUser(User)
+user_address_crud = CRUDUserAddress(UserAddress)
