@@ -29,12 +29,12 @@ class UserUpdateSchema(UserCreateSchema):
 class UserOutMinimalSchema(BaseUserSchema):
     id: UUID4
     last_login: datetime | None
-    groups: List["GroupOutMinimalSchema"] = []
 
 
 class UserOutSchema(UserOutMinimalSchema):
     created_at: datetime
     updated_at: datetime | None = None
+    groups: List["GroupOutMinimalSchema"] = []
 
 
 class UserAddressCreateSchema(BaseAddressSchema):

@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import (
     UUID,
     Column,
@@ -17,7 +19,7 @@ from .constant import OrderStatus
 class Order(BaseTimeStamp):
     __tablename__ = "order_order"
 
-    number = Column(String(128), index=True, unique=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="SET NULL")
     )
@@ -30,10 +32,11 @@ class Order(BaseTimeStamp):
     status = Column(Enum(OrderStatus))
     guest_email = Column(String(255))
 
-    lines = relationship("Line", backref="order")
+    lines = relationship("OrderLine", backref="order")
+    user = relationship("User", back_populates="orders")
 
 
-class Line(BaseUUID):
+class OrderLine(BaseUUID):
     __tablename__ = "order_line"
 
     order_id = Column(
@@ -52,3 +55,5 @@ class Line(BaseUUID):
 
     unit_price_incl_tax = Column(Numeric(12, 2))
     unit_price_excl_tax = Column(Numeric(12, 2))
+
+    product = relationship("Product", back_populates="lines")

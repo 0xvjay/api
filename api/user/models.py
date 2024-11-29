@@ -20,5 +20,5 @@ class User(BaseTimeStamp):
     groups = relationship(
         "Group", secondary="auth_user_group", back_populates="users", lazy="joined"
     )
-    orders = relationship("Order", backref="user")
+    orders = relationship("Order", back_populates="user")
     addresses = relationship("UserAddress", backref="user")

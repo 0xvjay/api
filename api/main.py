@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from api.auth.router import router as auth_router
 from api.catalogue.router import router as catalogue_router
 from api.config import settings
+from api.order.router import router as order_router
 from api.user.router import router as user_router
 
 logging.config.dictConfig(settings.LOGGING_CONFIG)
@@ -38,6 +39,7 @@ def health():
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(catalogue_router)
+app.include_router(order_router)
 
 if __name__ == "__main__":
     uvicorn_config = {
