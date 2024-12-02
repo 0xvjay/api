@@ -11,6 +11,8 @@ from api.auth.permissions import (
 )
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
+from api.order.schemas import OrderOutMinimalSchema
+from api.order.service import order_crud
 
 from .exceptions import UserAddressNotFound, UserEmailOrNameExists, UserNotFound
 from .schemas import (
@@ -128,7 +130,7 @@ async def remove_user(db_session: DBSession, user_id: UUID4):
 
 
 @router.get("/{user_id}/user_addresses/", response_model=List[UserAddressOutSchema])
-@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
+@allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER_ADDRESS)
 async def read_user_addresses(request: Request, db_session: DBSession, user_id: UUID4):
     try:
         result = await user_address_crud.list(db_session=db_session, user_id=user_id)
@@ -142,7 +144,7 @@ async def read_user_addresses(request: Request, db_session: DBSession, user_id: 
     "/{user_id}/user_addresses/{user_address_id}",
     response_model=UserAddressOutSchema,
 )
-@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
+@allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER_ADDRESS)
 async def read_user_address(
     request: Request, db_session: DBSession, user_id: UUID4, user_address_id: UUID4
 ):
@@ -167,7 +169,7 @@ async def read_user_address(
     response_model=UserAddressOutSchema,
     status_code=status.HTTP_201_CREATED,
 )
-@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
+@allow_self_access("user_id", PermissionAction.CREATE, PermissionObject.USER_ADDRESS)
 async def add_user_address(
     request: Request,
     db_session: DBSession,
@@ -218,7 +220,7 @@ async def edit_user_address(
     "/{user_id}/user_addresses/{user_address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
+@allow_self_access("user_id", PermissionAction.DELETE, PermissionObject.USER_ADDRESS)
 async def remove_user_address(
     request: Request, db_session: DBSession, user_id: UUID4, user_address_id: UUID4
 ):
@@ -234,4 +236,17 @@ async def remove_user_address(
         logger.exception(
             f"Failed to delete user address {user_address_id} of user {user_id}: {str(e)}"
         )
+        raise DetailedHTTPException()
+
+
+@router.get("/{user_id}/orders/", response_model=List[OrderOutMinimalSchema])
+@allow_self_access("user_id", PermissionAction.READ, PermissionObject.ORDER)
+async def read_user_orders(db_session: DBSession, user_id: UUID4):
+    try:
+        result = await order_crud.get_user_orders(
+            db_session=db_session, user_id=user_id
+        )
+        return result
+    except Exception as e:
+        logger.exception(f"Failed to fetch user {user_id} orders: {str(e)}")
         raise DetailedHTTPException()

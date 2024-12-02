@@ -1,11 +1,12 @@
 from decimal import Decimal
+from typing import List
 
 from pydantic import UUID4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from api.service import CRUDBase
+from api.services.crud import CRUDBase
 
 from .constant import OrderStatus
 from .models import Order, OrderLine
@@ -81,6 +82,12 @@ class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
         await db_session.commit()
         await db_session.refresh(db_order)
         return db_order
+
+    async def get_user_orders(
+        self, db_session: AsyncSession, user_id: UUID4
+    ) -> List[Order]:
+        result = await db_session.execute(select(Order).where(Order.user_id == user_id))
+        return result
 
 
 order_crud = CRUDOrder(Order)

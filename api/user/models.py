@@ -22,3 +22,4 @@ class User(BaseTimeStamp):
     )
     orders = relationship("Order", back_populates="user")
     addresses = relationship("UserAddress", backref="user")
+    admin_logs = relationship("AdminLog", backref="user")

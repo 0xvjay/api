@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.service import CRUDBase
+from api.services.crud import CRUDBase
 
 from .models import Category, Product, SubCategory
 from .schemas import (
