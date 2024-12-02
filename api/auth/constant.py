@@ -11,3 +11,6 @@ class PermissionAction(StrEnum):
 class PermissionObject(StrEnum):
     GROUP = "group"
     USER = "user"
+    USER_ADDRESS = "user_address"
+    ORDER = "order"
+    CATALOGUE = "catalogue"

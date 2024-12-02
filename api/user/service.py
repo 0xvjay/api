@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.address.models import UserAddress
 from api.auth.models import Group
+from api.auth.security import get_password_hash
 from api.service import CRUDBase
 
 from .models import User
@@ -72,6 +73,7 @@ class CRUDUser(CRUDBase[User, UserCreateSchema, UserUpdateSchema]):
 
     async def create(self, db_session: AsyncSession, user: UserCreateSchema) -> User:
         db_user = User(**user.model_dump(exclude={"groups"}))
+        db_user.password = get_password_hash(user.password)
         if user.groups:
             db_user.groups.clear()
 

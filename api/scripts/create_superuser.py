@@ -6,7 +6,7 @@ import typer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from api.auth.utils import get_password_hash
+from api.auth.security import get_password_hash
 from api.database import AsyncSessionLocal
 from api.user.models import User
 

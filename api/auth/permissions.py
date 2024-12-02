@@ -1,10 +1,38 @@
-from fastapi import Depends
+from functools import wraps
+from typing import Callable, TypeVar
+
+from fastapi import Request
 
 from api.exceptions import NotAuthenticated, PermissionDenied
 from api.user.models import User
 
 from .constant import PermissionAction, PermissionObject
-from .dependencies import get_current_active_user
+
+T = TypeVar("T")
+
+
+def allow_self_access(
+    user_id_param: str,
+    permission_action: PermissionAction,
+    permission_object: PermissionObject,
+) -> Callable[[T], T]:
+    def decorator(func: T) -> T:
+        @wraps(func)
+        async def wrapper(*args, request: Request, **kwargs):
+            current_user: User = request.state.user
+            target_id = kwargs.get(user_id_param)
+
+            if not current_user or current_user.id != target_id:
+                if not BasePermissionDependency.has_permission(
+                    current_user, permission_action, permission_object
+                ):
+                    raise PermissionDenied()
+
+            return await func(*args, request=request, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class BasePermissionDependency:
@@ -42,14 +70,12 @@ class BasePermissionDependency:
             for permission in group.permissions
         )
 
-    async def __call__(
-        self, current_user: User = Depends(get_current_active_user)
-    ) -> User:
+    async def __call__(self, request: Request) -> User:
         """
-        FastAPI dependency callable that checks permissions for the current user
+        FastAPI dependency callable that checks permissions using request.state.user
 
         Args:
-            current_user: The current authenticated user
+            request: The current request object
 
         Returns:
             User: The current user if permission check passes
@@ -58,6 +84,7 @@ class BasePermissionDependency:
             NotAuthenticated: If no user is authenticated
             PermissionDenied: If user lacks required permission
         """
+        current_user = request.state.user
         if not current_user:
             raise NotAuthenticated()
 
@@ -85,4 +112,18 @@ class UserPermissions:
     delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.USER)
 
 
-# async def delete_group(group_id: int, current_user: User = Depends(GroupPermissions.delete))
+class UserAddressPermissions:
+    """Permissions for user-address-related actions"""
+
+    create = BasePermissionDependency(
+        PermissionAction.CREATE, PermissionObject.USER_ADDRESS
+    )
+    read = BasePermissionDependency(
+        PermissionAction.READ, PermissionObject.USER_ADDRESS
+    )
+    update = BasePermissionDependency(
+        PermissionAction.UPDATE, PermissionObject.USER_ADDRESS
+    )
+    delete = BasePermissionDependency(
+        PermissionAction.DELETE, PermissionObject.USER_ADDRESS
+    )

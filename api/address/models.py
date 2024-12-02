@@ -61,7 +61,7 @@ class UserAddress(BaseAddress, BaseTimeStamp):
 
     phone_number = Column(String(20))
     notes = Column(Text)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user_user.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="CASCADE"))
 
     #: Whether this address is the default for shipping
     is_default_for_shipping = Column(Boolean, default=False)

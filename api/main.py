@@ -2,10 +2,12 @@ import logging.config
 import os
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from api.auth.dependencies import get_current_active_user
+from api.auth.router import not_authenticated_router
 from api.auth.router import router as auth_router
 from api.catalogue.router import router as catalogue_router
 from api.config import settings
@@ -36,10 +38,15 @@ def health():
     return {"status": "ok"}
 
 
-app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(catalogue_router)
-app.include_router(order_router)
+authenticated_router = APIRouter(dependencies=[Depends(get_current_active_user)])
+
+authenticated_router.include_router(auth_router)
+authenticated_router.include_router(user_router)
+authenticated_router.include_router(catalogue_router)
+authenticated_router.include_router(order_router)
+
+app.include_router(authenticated_router)
+app.include_router(not_authenticated_router)
 
 if __name__ == "__main__":
     uvicorn_config = {

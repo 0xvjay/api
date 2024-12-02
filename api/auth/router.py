@@ -27,7 +27,10 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/login")
+not_authenticated_router = APIRouter()
+
+
+@not_authenticated_router.post("/login")
 async def login(
     db_session: DBSession,
     form: AuthSchema,

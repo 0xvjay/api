@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
+from api.catalogue.models import Product  # noqa: F401
 from api.models import BaseTimeStamp, BaseUUID
 
 from .constant import OrderStatus

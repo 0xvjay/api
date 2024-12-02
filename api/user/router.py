@@ -1,9 +1,14 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import UUID4
 
+from api.auth.constant import PermissionAction, PermissionObject
+from api.auth.permissions import (
+    UserPermissions,
+    allow_self_access,
+)
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 
@@ -25,7 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 @router.post(
-    "/", response_model=UserOutMinimalSchema, status_code=status.HTTP_201_CREATED
+    "/",
+    response_model=UserOutMinimalSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(UserPermissions.create)],
 )
 async def add_user(db_session: DBSession, user: UserCreateSchema):
     try:
@@ -43,7 +51,11 @@ async def add_user(db_session: DBSession, user: UserCreateSchema):
         raise DetailedHTTPException()
 
 
-@router.get("/", response_model=List[UserOutMinimalSchema])
+@router.get(
+    "/",
+    response_model=List[UserOutMinimalSchema],
+    dependencies=[Depends(UserPermissions.read)],
+)
 async def read_users(
     db_session: DBSession, query_str: str | None = None, order_by: str | None = None
 ):
@@ -56,7 +68,8 @@ async def read_users(
 
 
 @router.get("/{user_id}", response_model=UserOutSchema)
-async def read_user(db_session: DBSession, user_id: UUID4):
+@allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER)
+async def read_user(request: Request, db_session: DBSession, user_id: UUID4):
     try:
         result = await user_crud.get(db_session=db_session, id=user_id)
         if result is None:
@@ -70,7 +83,10 @@ async def read_user(db_session: DBSession, user_id: UUID4):
 
 
 @router.put("/{user_id}", response_model=UserOutMinimalSchema)
-async def edit_user(db_session: DBSession, user: UserUpdateSchema, user_id: UUID4):
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER)
+async def edit_user(
+    request: Request, db_session: DBSession, user: UserUpdateSchema, user_id: UUID4
+):
     try:
         db_user = await user_crud.get(db_session=db_session, id=user_id)
         if db_user is None:
@@ -92,7 +108,11 @@ async def edit_user(db_session: DBSession, user: UserUpdateSchema, user_id: UUID
         raise DetailedHTTPException()
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(UserPermissions.delete)],
+)
 async def remove_user(db_session: DBSession, user_id: UUID4):
     try:
         db_user = await user_crud.get(db_session=db_session, id=user_id)
@@ -108,7 +128,8 @@ async def remove_user(db_session: DBSession, user_id: UUID4):
 
 
 @router.get("/{user_id}/user_addresses/", response_model=List[UserAddressOutSchema])
-async def read_user_addresses(db_session: DBSession, user_id: UUID4):
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
+async def read_user_addresses(request: Request, db_session: DBSession, user_id: UUID4):
     try:
         result = await user_address_crud.list(db_session=db_session, user_id=user_id)
         return result
@@ -121,8 +142,9 @@ async def read_user_addresses(db_session: DBSession, user_id: UUID4):
     "/{user_id}/user_addresses/{user_address_id}",
     response_model=UserAddressOutSchema,
 )
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
 async def read_user_address(
-    db_session: DBSession, user_id: UUID4, user_address_id: UUID4
+    request: Request, db_session: DBSession, user_id: UUID4, user_address_id: UUID4
 ):
     try:
         result = await user_address_crud.get(
@@ -145,8 +167,12 @@ async def read_user_address(
     response_model=UserAddressOutSchema,
     status_code=status.HTTP_201_CREATED,
 )
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
 async def add_user_address(
-    db_session: DBSession, user_address: UserAddressCreateSchema, user_id: UUID4
+    request: Request,
+    db_session: DBSession,
+    user_address: UserAddressCreateSchema,
+    user_id: UUID4,
 ):
     try:
         result = await user_address_crud.create(
@@ -161,7 +187,9 @@ async def add_user_address(
 @router.put(
     "/{user_id}/user_addresses/{user_address_id}", response_model=UserAddressOutSchema
 )
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
 async def edit_user_address(
+    request: Request,
     db_session: DBSession,
     user_address: UserAddressUpdateSchema,
     user_id: UUID4,
@@ -190,8 +218,9 @@ async def edit_user_address(
     "/{user_id}/user_addresses/{user_address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
+@allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
 async def remove_user_address(
-    db_session: DBSession, user_id: UUID4, user_address_id: UUID4
+    request: Request, db_session: DBSession, user_id: UUID4, user_address_id: UUID4
 ):
     try:
         db_user_address = await user_address_crud.get(
