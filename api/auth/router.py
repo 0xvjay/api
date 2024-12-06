@@ -2,14 +2,14 @@ import logging
 from datetime import timedelta
 from typing import List
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from pydantic import UUID4
 
 from api.config import settings
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 from api.user.exceptions import UserNotFound
-
+from .permissions import GroupPermissions
 from .exceptions import GroupExists, GroupNotFound
 from .schemas import (
     AuthSchema,
@@ -59,6 +59,7 @@ async def login(
 @router.get(
     "/groups/",
     response_model=List[GroupOutMinimalSchema],
+    dependencies=[Depends(GroupPermissions.read)],
 )
 async def read_groups(
     db_session: DBSession,
@@ -75,7 +76,11 @@ async def read_groups(
         raise DetailedHTTPException()
 
 
-@router.get("/groups/{group_id}", response_model=GroupOutSchema)
+@router.get(
+    "/groups/{group_id}",
+    response_model=GroupOutSchema,
+    dependencies=[Depends(GroupPermissions.read)],
+)
 async def read_group(db_session: DBSession, group_id: UUID4):
     try:
         result = await group_crud.get(db_session=db_session, id=group_id)
@@ -93,6 +98,7 @@ async def read_group(db_session: DBSession, group_id: UUID4):
     "/groups/",
     response_model=GroupOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(GroupPermissions.create)],
 )
 async def add_group(db_session: DBSession, group: GroupCreateSchema):
     try:
@@ -108,7 +114,11 @@ async def add_group(db_session: DBSession, group: GroupCreateSchema):
         raise DetailedHTTPException()
 
 
-@router.put("/groups/{group_id}", response_model=GroupOutMinimalSchema)
+@router.put(
+    "/groups/{group_id}",
+    response_model=GroupOutMinimalSchema,
+    dependencies=[Depends(GroupPermissions.update)],
+)
 async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: UUID4):
     try:
         db_group = await group_crud.get(db_session=db_session, id=group_id)
@@ -131,7 +141,11 @@ async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: 
         raise DetailedHTTPException()
 
 
-@router.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/groups/{group_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(GroupPermissions.delete)],
+)
 async def remove_group(db_session: DBSession, group_id: UUID4):
     try:
         db_group = await group_crud.get(db_session=db_session, id=group_id)
@@ -146,7 +160,11 @@ async def remove_group(db_session: DBSession, group_id: UUID4):
         raise DetailedHTTPException()
 
 
-@router.get("/permissions/", response_model=List[PermissionOutMinimalSchema])
+@router.get(
+    "/permissions/",
+    response_model=List[PermissionOutMinimalSchema],
+    dependencies=[Depends(GroupPermissions.read)],
+)
 async def read_permissions(db_session: DBSession):
     try:
         result = await get_permissions(db_session=db_session)

@@ -62,9 +62,27 @@ Make sure you have the following installed:
    uvicorn api.main:app --reload
    ```
 
-   The server will run at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+   The server will run at http://localhost:8000.
 
+## Docker Installation
+
+1. **Build the docker image**  
+    From the project root directory, build the Docker image:
+
+    ```bash
+    docker build -t learn001 .
+    ```
+  
+2. **Run the container**  
+    Start a container from the image:
+
+    ```bash
+    docker run -p 8000:8000 learn001
+    ```
+    The application will be available at http://localhost:8000
 ---
+
+Note: Make sure Docker is installed on your system and the Dockerfile is present in the project root directory.
 
 ### Additional Commands
 

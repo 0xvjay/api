@@ -1,8 +1,9 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 
+from api.auth.permissions import AdminLogPermissions, SiteSettingPermissions
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 
@@ -14,17 +15,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["logs"])
 
 
-@router.get("/logs/", response_model=List[AdminLogOutSchema])
-async def read_logs(db_session: DBSession):
+@router.get(
+    "/logs/",
+    response_model=List[AdminLogOutSchema],
+    dependencies=[Depends(AdminLogPermissions.read)],
+)
+async def read_logs(request: Request, db_session: DBSession):
     try:
-        result = await admin_log_crud.list(db_session=db_session)
+        result = await admin_log_crud.list(db_session=db_session, request=request)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch admin logs: {str(e)}")
         raise DetailedHTTPException()
 
 
-@router.get("/site_settings/", response_model=SiteSettingOutSchema)
+@router.get(
+    "/site_settings/",
+    response_model=SiteSettingOutSchema,
+    dependencies=[Depends(SiteSettingPermissions.read)],
+)
 async def read_site_settings(db_session: DBSession):
     try:
         result = await site_setting_crud.get(db_session=db_session)
@@ -34,7 +43,11 @@ async def read_site_settings(db_session: DBSession):
         raise DetailedHTTPException()
 
 
-@router.put("/site_settings/", response_model=SiteSettingOutSchema)
+@router.put(
+    "/site_settings/",
+    response_model=SiteSettingOutSchema,
+    dependencies=[Depends(SiteSettingPermissions.update)],
+)
 async def edit_site_settings(
     db_session: DBSession, site_setting: SiteSettingUpdateSchema
 ):

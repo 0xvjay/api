@@ -241,7 +241,7 @@ async def remove_user_address(
 
 @router.get("/{user_id}/orders/", response_model=List[OrderOutMinimalSchema])
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.ORDER)
-async def read_user_orders(db_session: DBSession, user_id: UUID4):
+async def read_user_orders(request: Request, db_session: DBSession, user_id: UUID4):
     try:
         result = await order_crud.get_user_orders(
             db_session=db_session, user_id=user_id

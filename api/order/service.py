@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from api.services.crud import CRUDBase
+from api.core.crud import CRUDBase
 
 from .constant import OrderStatus
 from .models import Order, OrderLine

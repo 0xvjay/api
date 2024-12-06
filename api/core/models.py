@@ -1,16 +1,14 @@
 from sqlalchemy import UUID, Boolean, Column, Enum, ForeignKey, String, Text
 
-from api.auth.constant import PermissionAction
 from api.models import BaseTimeStamp, BaseUUID
+from .constant import Action
 
 
 class AdminLog(BaseTimeStamp):
     __tablename__ = "core_admin_log"
 
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="SET NULL")
-    )
-    action = Column(Enum(PermissionAction))
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="SET NULL"))
+    action = Column(Enum(Action))
     object = Column(String(255))
     description = Column(Text)
 

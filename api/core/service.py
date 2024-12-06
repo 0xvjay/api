@@ -1,25 +1,60 @@
+import logging
+from typing import Any
+
+from pydantic import UUID4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.services.crud import CRUDBase
+from api.core.crud import CRUDBase
 
+from .constant import Action
 from .models import AdminLog, SiteSetting
 from .schemas import (
-    AdminLogCreateSchema,
-    AdminLogUpdateSchema,
     SiteSettingCreateSchema,
     SiteSettingUpdateSchema,
 )
 
+logger = logging.getLogger(__name__)
 
-class CRUDAdminLog(CRUDBase[AdminLog, AdminLogCreateSchema, AdminLogUpdateSchema]):
-    async def create(self, db_session: AsyncSession, admin_log: AdminLogCreateSchema):
-        db_obj = AdminLog(**admin_log.model_dump())
-        db_session.add(db_obj)
 
+async def create_admin_log(
+    db_session: AsyncSession,
+    user_id: UUID4,
+    action: Action,
+    object_name: str,
+    description: str | None = None,
+) -> None:
+    """
+    Create an admin log entry to track administrative actions.
+
+    Args:
+        db_session: Database session
+        user_id: UUID of the user performing the action
+        action: Type of action performed (from Action enum)
+        object_name: Name/identifier of the object being acted upon
+        description: Optional detailed description of the action
+
+    """
+    try:
+        admin_log = AdminLog(
+            user_id=user_id, action=action, object=object_name, description=description
+        )
+
+        db_session.add(admin_log)
         await db_session.commit()
-        await db_session.refresh(db_obj)
-        return db_obj
+        await db_session.refresh(admin_log)
+
+        return
+
+    except Exception as e:
+        await db_session.rollback()
+        logger.exception(
+            f"Failed to create admin log: {str(e)}, {user_id} {action} {object_name}"
+        )
+
+
+class CRUDAdminLog(CRUDBase[AdminLog, Any, Any]):
+    pass
 
 
 class CRUDSiteSetting(
@@ -53,14 +88,14 @@ class CRUDSiteSetting(
             db_site_setting = await self.get(db_session=db_session)
 
         for field, value in site_setting.model_dump(exclude_unset=True).items():
-            setattr(site_setting, field, value)
+            setattr(db_site_setting, field, value)
 
-        db_session.add(site_setting)
+        db_session.add(db_site_setting)
         await db_session.commit()
-        await db_session.refresh(site_setting)
+        await db_session.refresh(db_site_setting)
 
-        return site_setting
+        return db_site_setting
 
 
-admin_log_crud = CRUDAdminLog(AdminLog)
-site_setting_crud = CRUDSiteSetting(SiteSetting)
+admin_log_crud = CRUDAdminLog(AdminLog, "Admin Log")
+site_setting_crud = CRUDSiteSetting(SiteSetting, "Site Setting")

@@ -20,10 +20,8 @@ from .constant import OrderStatus
 class Order(BaseTimeStamp):
     __tablename__ = "order_order"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="SET NULL")
-    )
+    id = Column(UUID, primary_key=True, index=True, default=uuid.uuid4)
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="SET NULL"))
     total_incl_tax = Column(Numeric(12, 2))
     total_excl_tax = Column(Numeric(12, 2))
 
@@ -40,12 +38,8 @@ class Order(BaseTimeStamp):
 class OrderLine(BaseUUID):
     __tablename__ = "order_line"
 
-    order_id = Column(
-        UUID(as_uuid=True), ForeignKey("order_order.id", ondelete="CASCADE")
-    )
-    product_id = Column(
-        UUID(as_uuid=True), ForeignKey("catalogue_product.id", ondelete="SET NULL")
-    )
+    order_id = Column(UUID, ForeignKey("order_order.id", ondelete="CASCADE"))
+    product_id = Column(UUID, ForeignKey("catalogue_product.id", ondelete="SET NULL"))
     quantity = Column(Integer, default=1)
 
     line_price_incl_tax = Column(Numeric(12, 2))

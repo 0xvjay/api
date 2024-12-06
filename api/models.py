@@ -10,7 +10,7 @@ from api.database import Base
 class BaseUUID(Base):
     __abstract__ = True
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
 
 
 class BaseTimeStamp(BaseUUID):

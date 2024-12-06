@@ -3,7 +3,6 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
 from api.models import BaseTimeStamp, BaseUUID
-from api.user.models import User  # noqa: F401
 
 from .constant import PermissionAction
 
@@ -12,12 +11,12 @@ class UserGroup(BaseUUID):
     __tablename__ = "auth_user_group"
 
     group_id = Column(
-        UUID(as_uuid=True),
+        UUID,
         ForeignKey("auth_group.id", ondelete="CASCADE"),
         primary_key=True,
     )
     user_id = Column(
-        UUID(as_uuid=True),
+        UUID,
         ForeignKey("user_user.id", ondelete="CASCADE"),
         primary_key=True,
     )
@@ -27,12 +26,12 @@ class GroupPermission(BaseUUID):
     __tablename__ = "auth_group_permission"
 
     group_id = Column(
-        UUID(as_uuid=True),
+        UUID,
         ForeignKey("auth_group.id", ondelete="CASCADE"),
         primary_key=True,
     )
     permission_id = Column(
-        UUID(as_uuid=True),
+        UUID,
         ForeignKey("auth_permission.id", ondelete="CASCADE"),
         primary_key=True,
     )

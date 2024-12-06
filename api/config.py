@@ -37,7 +37,7 @@ class Config(BaseSettings):
         os.path.dirname(os.path.realpath(__file__))
     )
 
-    STATIC_DIR: str = "/static"
+    STATIC_DIR: str = "static"
 
     LOGGING_CONFIG: object = {
         "version": 1,

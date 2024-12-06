@@ -163,3 +163,4 @@ cython_debug/
 .vscode
 *.db
 migrations/versions/
+static/exports/

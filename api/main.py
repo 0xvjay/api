@@ -1,5 +1,4 @@
 import logging.config
-import os
 
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI
@@ -11,6 +10,8 @@ from api.auth.router import not_authenticated_router
 from api.auth.router import router as auth_router
 from api.catalogue.router import router as catalogue_router
 from api.config import settings
+from api.core.router import router as core_router
+from api.export.router import router as export_router
 from api.order.router import router as order_router
 from api.user.router import router as user_router
 
@@ -29,8 +30,7 @@ app.add_middleware(
 )
 
 
-if settings.STATIC_DIR and os.path.isdir(settings.STATIC_DIR):
-    app.mount("/", StaticFiles(directory=settings.STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 
 
 @app.get("/health", include_in_schema=False)
@@ -44,6 +44,8 @@ authenticated_router.include_router(auth_router)
 authenticated_router.include_router(user_router)
 authenticated_router.include_router(catalogue_router)
 authenticated_router.include_router(order_router)
+authenticated_router.include_router(core_router)
+authenticated_router.include_router(export_router)
 
 app.include_router(authenticated_router)
 app.include_router(not_authenticated_router)

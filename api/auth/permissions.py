@@ -95,8 +95,6 @@ class BasePermissionDependency:
 
 
 class GroupPermissions:
-    """Permissions for group-related actions"""
-
     create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.GROUP)
     read = BasePermissionDependency(PermissionAction.READ, PermissionObject.GROUP)
     update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.GROUP)
@@ -104,17 +102,48 @@ class GroupPermissions:
 
 
 class UserPermissions:
-    """Permissions for user-related actions"""
-
     create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.USER)
     read = BasePermissionDependency(PermissionAction.READ, PermissionObject.USER)
     update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.USER)
     delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.USER)
 
 
-class UserAddressPermissions:
-    """Permissions for user-address-related actions"""
+class ProductPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.PRODUCT)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.PRODUCT)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.PRODUCT)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.PRODUCT)
 
+
+class CategoryPermissions:
+    create = BasePermissionDependency(
+        PermissionAction.CREATE, PermissionObject.CATEGORY
+    )
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.CATEGORY)
+    update = BasePermissionDependency(
+        PermissionAction.UPDATE, PermissionObject.CATEGORY
+    )
+    delete = BasePermissionDependency(
+        PermissionAction.DELETE, PermissionObject.CATEGORY
+    )
+
+
+class SubCategoryPermissions:
+    create = BasePermissionDependency(
+        PermissionAction.CREATE, PermissionObject.SUB_CATEGORY
+    )
+    read = BasePermissionDependency(
+        PermissionAction.READ, PermissionObject.SUB_CATEGORY
+    )
+    update = BasePermissionDependency(
+        PermissionAction.UPDATE, PermissionObject.SUB_CATEGORY
+    )
+    delete = BasePermissionDependency(
+        PermissionAction.DELETE, PermissionObject.SUB_CATEGORY
+    )
+
+
+class UserAddressPermissions:
     create = BasePermissionDependency(
         PermissionAction.CREATE, PermissionObject.USER_ADDRESS
     )
@@ -127,3 +156,27 @@ class UserAddressPermissions:
     delete = BasePermissionDependency(
         PermissionAction.DELETE, PermissionObject.USER_ADDRESS
     )
+
+
+class AdminLogPermissions:
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.ADMIN_LOG)
+
+
+class SiteSettingPermissions:
+    read = BasePermissionDependency(
+        PermissionAction.READ, PermissionObject.SITE_SETTING
+    )
+    update = BasePermissionDependency(
+        PermissionAction.UPDATE, PermissionObject.SITE_SETTING
+    )
+
+
+class ExportPermissions:
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.EXPORT)
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.EXPORT)
+
+
+class OrderPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.ORDER)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.ORDER)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.ORDER)

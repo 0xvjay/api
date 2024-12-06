@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.services.crud import CRUDBase
+from api.core.crud import CRUDBase
 
 from .models import Group, Permission
 from .schemas import GroupCreateSchema, GroupUpdateSchema

@@ -8,8 +8,8 @@ from api.models import BaseTimeStamp, BaseUUID
 class SubCategoryProduct(BaseUUID):
     __tablename__ = "catalogue_subcategory_product"
 
-    sub_category_id = Column(UUID(as_uuid=True), ForeignKey("catalogue_subcategory.id"))
-    product_id = Column(UUID(as_uuid=True), ForeignKey("catalogue_product.id"))
+    sub_category_id = Column(UUID, ForeignKey("catalogue_subcategory.id"))
+    product_id = Column(UUID, ForeignKey("catalogue_product.id"))
 
 
 class Category(BaseUUID):
@@ -28,7 +28,7 @@ class SubCategory(BaseUUID):
     is_active = Column(Boolean, default=True, index=True)
     slug = Column(String(255))
 
-    category_id = Column(UUID(as_uuid=True), ForeignKey("catalogue_category.id"))
+    category_id = Column(UUID, ForeignKey("catalogue_category.id"))
     products = relationship(
         "Product",
         secondary="catalogue_subcategory_product",

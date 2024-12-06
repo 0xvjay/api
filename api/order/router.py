@@ -1,9 +1,10 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import UUID4
 
+from api.auth.permissions import OrderPermissions
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 
@@ -20,7 +21,11 @@ router = APIRouter(prefix="/orders", tags=["order"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/", response_model=List[OrderOutMinimalSchema])
+@router.get(
+    "/",
+    response_model=List[OrderOutMinimalSchema],
+    dependencies=[Depends(OrderPermissions.read)],
+)
 async def read_orders(
     db_session: DBSession, query_str: str | None = None, order_by: str | None = None
 ):
@@ -34,7 +39,11 @@ async def read_orders(
         raise DetailedHTTPException()
 
 
-@router.get("/{order_id}", response_model=OrderOutSchema)
+@router.get(
+    "/{order_id}",
+    response_model=OrderOutSchema,
+    dependencies=[Depends(OrderPermissions.read)],
+)
 async def read_order(db_session: DBSession, order_id: UUID4):
     try:
         result = await order_crud.get(db_session=db_session, id=order_id)
@@ -48,7 +57,11 @@ async def read_order(db_session: DBSession, order_id: UUID4):
         raise DetailedHTTPException()
 
 
-@router.post("/", response_model=OrderCreateSchema)
+@router.post(
+    "/",
+    response_model=OrderCreateSchema,
+    dependencies=[Depends(OrderPermissions.create)],
+)
 async def add_order(db_session: DBSession, order: OrderCreateSchema):
     try:
         result = await order_crud.create(db_session=db_session, order=order)
@@ -58,7 +71,11 @@ async def add_order(db_session: DBSession, order: OrderCreateSchema):
         raise DetailedHTTPException()
 
 
-@router.put("/{order_id}", response_model=OrderOutMinimalSchema)
+@router.put(
+    "/{order_id}",
+    response_model=OrderOutMinimalSchema,
+    dependencies=[Depends(OrderPermissions.update)],
+)
 async def edit_order(db_session: DBSession, order: OrderUpdateSchema, order_id: UUID4):
     try:
         db_order = await order_crud.get(db_session=db_session, id=order_id)

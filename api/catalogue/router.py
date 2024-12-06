@@ -1,9 +1,14 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from pydantic import UUID4
 
+from api.auth.permissions import (
+    CategoryPermissions,
+    ProductPermissions,
+    SubCategoryPermissions,
+)
 from api.catalogue.service import category_crud, product_crud, sub_category_crud
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
@@ -35,7 +40,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["catalogue"])
 
 
-@router.get("/categories/", response_model=List[CategoryOutSchema])
+@router.get(
+    "/categories/",
+    response_model=List[CategoryOutSchema],
+    dependencies=[Depends(CategoryPermissions.read)],
+)
 async def read_categories(db_session: DBSession):
     try:
         result = await category_crud.list(db_session=db_session)
@@ -45,7 +54,11 @@ async def read_categories(db_session: DBSession):
         raise DetailedHTTPException()
 
 
-@router.get("/categories/{category_id}", response_model=CategoryOutSchema)
+@router.get(
+    "/categories/{category_id}",
+    response_model=CategoryOutSchema,
+    dependencies=[Depends(CategoryPermissions.read)],
+)
 async def read_category(db_session: DBSession, category_id: UUID4):
     try:
         result = await category_crud.get(db_session=db_session, id=category_id)
@@ -63,6 +76,7 @@ async def read_category(db_session: DBSession, category_id: UUID4):
     "/categories/",
     response_model=CategoryOutSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(CategoryPermissions.create)],
 )
 async def add_category(db_session: DBSession, category: CategoryCreateSchema):
     try:
@@ -80,7 +94,11 @@ async def add_category(db_session: DBSession, category: CategoryCreateSchema):
         raise DetailedHTTPException()
 
 
-@router.put("/categories/{category_id}", response_model=CategoryOutSchema)
+@router.put(
+    "/categories/{category_id}",
+    response_model=CategoryOutSchema,
+    dependencies=[Depends(CategoryPermissions.update)],
+)
 async def edit_category(
     db_session: DBSession, category: CategoryUpdateSchema, category_id: UUID4
 ):
@@ -105,7 +123,11 @@ async def edit_category(
         raise DetailedHTTPException()
 
 
-@router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/categories/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(CategoryPermissions.delete)],
+)
 async def remove_category(db_session: DBSession, category_id: UUID4):
     try:
         db_category = await category_crud.get(db_session=db_session, id=category_id)
@@ -120,7 +142,11 @@ async def remove_category(db_session: DBSession, category_id: UUID4):
         raise DetailedHTTPException()
 
 
-@router.get("/products/", response_model=List[ProductOutMinimalSchema])
+@router.get(
+    "/products/",
+    response_model=List[ProductOutMinimalSchema],
+    dependencies=[Depends(ProductPermissions.read)],
+)
 async def read_products(db_session: DBSession):
     try:
         result = await product_crud.list(db_session=db_session)
@@ -130,7 +156,11 @@ async def read_products(db_session: DBSession):
         raise DetailedHTTPException()
 
 
-@router.get("/products/{product_id}", response_model=ProductOutSchema)
+@router.get(
+    "/products/{product_id}",
+    response_model=ProductOutSchema,
+    dependencies=[Depends(ProductPermissions.read)],
+)
 async def read_product(db_session: DBSession, product_id: UUID4):
     try:
         result = await product_crud.get(db_session=db_session, id=product_id)
@@ -148,6 +178,7 @@ async def read_product(db_session: DBSession, product_id: UUID4):
     "/products/",
     response_model=ProductOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(ProductPermissions.create)],
 )
 async def add_product(db_session: DBSession, product: ProductCreateSchema):
     try:
@@ -165,7 +196,11 @@ async def add_product(db_session: DBSession, product: ProductCreateSchema):
         raise DetailedHTTPException()
 
 
-@router.put("/products/{product_id}", response_model=ProductOutMinimalSchema)
+@router.put(
+    "/products/{product_id}",
+    response_model=ProductOutMinimalSchema,
+    dependencies=[Depends(ProductPermissions.update)],
+)
 async def edit_product(
     db_session: DBSession, product: ProductUpdateSchema, product_id: UUID4
 ):
@@ -190,7 +225,11 @@ async def edit_product(
         raise DetailedHTTPException()
 
 
-@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/products/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(ProductPermissions.delete)],
+)
 async def remove_product(db_session: DBSession, product_id: UUID4):
     try:
         db_product = await product_crud.get(db_session=db_session, id=product_id)
@@ -205,7 +244,11 @@ async def remove_product(db_session: DBSession, product_id: UUID4):
         raise DetailedHTTPException()
 
 
-@router.get("/sub_categories/", response_model=List[SubCategoryOutMinimalSchema])
+@router.get(
+    "/sub_categories/",
+    response_model=List[SubCategoryOutMinimalSchema],
+    dependencies=[Depends(SubCategoryPermissions.read)],
+)
 async def read_sub_categories(db_session: DBSession):
     try:
         result = await sub_category_crud.list(db_session=db_session)
@@ -215,7 +258,11 @@ async def read_sub_categories(db_session: DBSession):
         raise DetailedHTTPException()
 
 
-@router.get("/sub_categories/{sub_category_id}", response_model=SubCategoryOutSchema)
+@router.get(
+    "/sub_categories/{sub_category_id}",
+    response_model=SubCategoryOutSchema,
+    dependencies=[Depends(SubCategoryPermissions.read)],
+)
 async def read_sub_category(db_session: DBSession, sub_category_id: UUID4):
     try:
         result = await sub_category_crud.get(db_session=db_session, id=sub_category_id)
@@ -233,6 +280,7 @@ async def read_sub_category(db_session: DBSession, sub_category_id: UUID4):
     "/sub_categories/",
     response_model=SubCategoryOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(SubCategoryPermissions.create)],
 )
 async def add_sub_category(
     db_session: DBSession, sub_category: SubCategoryCreateSchema
@@ -255,7 +303,9 @@ async def add_sub_category(
 
 
 @router.put(
-    "/sub_categories/{sub_category_id}", response_model=SubCategoryOutMinimalSchema
+    "/sub_categories/{sub_category_id}",
+    response_model=SubCategoryOutMinimalSchema,
+    dependencies=[Depends(SubCategoryPermissions.update)],
 )
 async def edit_sub_category(
     db_session: DBSession, sub_category: SubCategoryUpdateSchema, sub_category_id: UUID4
@@ -289,7 +339,9 @@ async def edit_sub_category(
 
 
 @router.delete(
-    "/sub_categories/{sub_category_id}", status_code=status.HTTP_204_NO_CONTENT
+    "/sub_categories/{sub_category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(SubCategoryPermissions.delete)],
 )
 async def remove_sub_category(db_session: DBSession, sub_category_id: UUID4):
     try:

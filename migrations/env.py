@@ -10,7 +10,9 @@ from api.address import models as address_models  # noqa: F401
 from api.auth import models as auth_models  # noqa: F401
 from api.catalogue import models as catalogue_models  # noqa: F401
 from api.config import db_settings
+from api.core import models as core_models  # noqa: F401
 from api.database import Base
+from api.export import models as export_models  # noqa: F401
 from api.order import models as order_models  # noqa: F401
 from api.user import models as user_models  # noqa: F401
 

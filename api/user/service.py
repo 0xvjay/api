@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.address.models import UserAddress
 from api.auth.models import Group
 from api.auth.security import get_password_hash
-from api.services.crud import CRUDBase
+from api.core.crud import CRUDBase
 
 from .models import User
 from .schemas import (
