@@ -1,12 +1,8 @@
 from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.orm import relationship
 
-from api.address.models import UserAddress  # noqa: F401
 from api.auth.models import UserGroup  # noqa: F401
-from api.core.models import AdminLog  # noqa: F401
-from api.export.models import Export  # noqa: F401
 from api.models import BaseTimeStamp
-from api.order.models import Order  # noqa: F401
 
 
 class User(BaseTimeStamp):
@@ -22,10 +18,4 @@ class User(BaseTimeStamp):
 
     is_superuser = Column(Boolean, default=False)
 
-    groups = relationship(
-        "Group", secondary="auth_user_group", back_populates="users", lazy="joined"
-    )
-    orders = relationship("Order", back_populates="user")
-    addresses = relationship("UserAddress", backref="user")
-    admin_logs = relationship("AdminLog", backref="user")
-    exports = relationship("Export", backref="created_by")
+    groups = relationship("Group", secondary="auth_user_group", back_populates="users")

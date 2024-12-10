@@ -1,4 +1,5 @@
 from sqlalchemy import UUID, Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
 
 from api.models import BaseTimeStamp, BaseUUID
 
@@ -75,3 +76,5 @@ class UserAddress(BaseAddress, BaseTimeStamp):
 
     #: Same as previous, but for billing address.
     num_orders_as_billing_address = Column(Integer, default=0)
+
+    user = relationship("User", backref="addresses")

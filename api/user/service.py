@@ -1,8 +1,10 @@
 from typing import List
 
+from fastapi import Request
 from pydantic import UUID4, EmailStr
 from sqlalchemy import desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.address.models import UserAddress
 from api.auth.models import Group
@@ -19,12 +21,23 @@ from .schemas import (
 
 
 class CRUDUser(CRUDBase[User, UserCreateSchema, UserUpdateSchema]):
+    async def get(
+        self, request: Request, db_session: AsyncSession, id: UUID4
+    ) -> User | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
+        result = await db_session.execute(
+            select(User).options(joinedload(User.groups)).where(User.id == id)
+        )
+        return result.unique().scalar_one_or_none()
+
     async def list(
         self,
+        request: Request,
         db_session: AsyncSession,
         query_str: str | None = None,
         order_by: str | None = None,
     ) -> List[User]:
+        await self._create_list_log(request=request, db_session=db_session)
         query = select(User)
 
         if query_str:
@@ -71,7 +84,10 @@ class CRUDUser(CRUDBase[User, UserCreateSchema, UserUpdateSchema]):
         result = await db_session.execute(query)
         return result.unique().scalar_one_or_none()
 
-    async def create(self, db_session: AsyncSession, user: UserCreateSchema) -> User:
+    async def create(
+        self, request: Request, db_session: AsyncSession, user: UserCreateSchema
+    ) -> User:
+        await self._create_add_log(request=request, db_session=db_session)
         db_user = User(**user.model_dump(exclude={"groups"}))
         db_user.password = get_password_hash(user.password)
         if user.groups:
@@ -91,8 +107,13 @@ class CRUDUser(CRUDBase[User, UserCreateSchema, UserUpdateSchema]):
         return db_user
 
     async def update(
-        self, db_session: AsyncSession, db_user: User, user: UserUpdateSchema
+        self,
+        request: Request,
+        db_session: AsyncSession,
+        db_user: User,
+        user: UserUpdateSchema,
     ) -> User:
+        await self._create_update_log(request=request, db_session=db_session)
         for key, value in user.model_dump(exclude={"groups"}).items():
             setattr(db_user, key, value)
 
@@ -117,11 +138,13 @@ class CRUDUserAddress(
 ):
     async def list(
         self,
+        request: Request,
         db_session: AsyncSession,
         user_id: UUID4,
         query_str: str | None = None,
         order_by: str | None = None,
     ) -> List[UserAddress]:
+        await self._create_list_log(request=request, db_session=db_session)
         query = select(UserAddress).where(UserAddress.user_id == user_id)
 
         if query_str:
@@ -141,8 +164,9 @@ class CRUDUserAddress(
         return result.unique().scalars().all()
 
     async def get(
-        self, db_session: AsyncSession, id: UUID4, user_id: UUID4
+        self, request: Request, db_session: AsyncSession, id: UUID4, user_id: UUID4
     ) -> UserAddress | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
         result = await db_session.execute(
             select(UserAddress).where(
                 UserAddress.user_id == user_id, UserAddress.id == id
@@ -151,8 +175,13 @@ class CRUDUserAddress(
         return result.unique().scalar_one_or_none()
 
     async def create(
-        self, db_session: AsyncSession, schema: UserAddressCreateSchema, user_id: UUID4
+        self,
+        request: Request,
+        db_session: AsyncSession,
+        schema: UserAddressCreateSchema,
+        user_id: UUID4,
     ) -> UserAddress:
+        await self._create_add_log(request=request, db_session=db_session)
         db_obj = UserAddress(**schema.model_dump(), user_id=user_id)
         db_session.add(db_obj)
         await db_session.commit()
@@ -161,5 +190,5 @@ class CRUDUserAddress(
         return db_obj
 
 
-user_crud = CRUDUser(User)
-user_address_crud = CRUDUserAddress(UserAddress)
+user_crud = CRUDUser(User, "User")
+user_address_crud = CRUDUserAddress(UserAddress, "User Address")

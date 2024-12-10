@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import UUID4
 
 from api.auth.permissions import (
@@ -45,9 +45,9 @@ router = APIRouter(tags=["catalogue"])
     response_model=List[CategoryOutSchema],
     dependencies=[Depends(CategoryPermissions.read)],
 )
-async def read_categories(db_session: DBSession):
+async def read_categories(request: Request, db_session: DBSession):
     try:
-        result = await category_crud.list(db_session=db_session)
+        result = await category_crud.list(request=request, db_session=db_session)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch categories: {str(e)}")
@@ -59,9 +59,11 @@ async def read_categories(db_session: DBSession):
     response_model=CategoryOutSchema,
     dependencies=[Depends(CategoryPermissions.read)],
 )
-async def read_category(db_session: DBSession, category_id: UUID4):
+async def read_category(request: Request, db_session: DBSession, category_id: UUID4):
     try:
-        result = await category_crud.get(db_session=db_session, id=category_id)
+        result = await category_crud.get(
+            request=request, db_session=db_session, id=category_id
+        )
         if result is None:
             raise CategoryNotFound()
         return result
@@ -78,14 +80,18 @@ async def read_category(db_session: DBSession, category_id: UUID4):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(CategoryPermissions.create)],
 )
-async def add_category(db_session: DBSession, category: CategoryCreateSchema):
+async def add_category(
+    request: Request, db_session: DBSession, category: CategoryCreateSchema
+):
     try:
         db_obj = await category_crud.get_by_name(
             db_session=db_session, name=category.name
         )
         if db_obj is not None:
             raise CategoryNameExists()
-        result = await category_crud.create(db_session=db_session, category=category)
+        result = await category_crud.create(
+            request=request, db_session=db_session, category=category
+        )
         return result
     except CategoryNameExists:
         raise
@@ -100,10 +106,15 @@ async def add_category(db_session: DBSession, category: CategoryCreateSchema):
     dependencies=[Depends(CategoryPermissions.update)],
 )
 async def edit_category(
-    db_session: DBSession, category: CategoryUpdateSchema, category_id: UUID4
+    request: Request,
+    db_session: DBSession,
+    category: CategoryUpdateSchema,
+    category_id: UUID4,
 ):
     try:
-        db_category = await category_crud.get(db_session=db_session, id=category_id)
+        db_category = await category_crud.get(
+            request=request, db_session=db_session, id=category_id
+        )
         if db_category is None:
             raise CategoryNotFound()
         if db_category != category.name:
@@ -113,7 +124,10 @@ async def edit_category(
             if existing_category is not None and existing_category.id != category_id:
                 raise CategoryNameExists()
         updated_category = await category_crud.update(
-            db_session=db_session, category=category, db_category=db_category
+            request=request,
+            db_session=db_session,
+            category=category,
+            db_category=db_category,
         )
         return updated_category
     except (CategoryNameExists, CategoryNotFound):
@@ -128,12 +142,16 @@ async def edit_category(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(CategoryPermissions.delete)],
 )
-async def remove_category(db_session: DBSession, category_id: UUID4):
+async def remove_category(request: Request, db_session: DBSession, category_id: UUID4):
     try:
-        db_category = await category_crud.get(db_session=db_session, id=category_id)
+        db_category = await category_crud.get(
+            request=request, db_session=db_session, id=category_id
+        )
         if db_category is None:
             raise CategoryNotFound()
-        await category_crud.delete(db_session=db_session, db_obj=db_category)
+        await category_crud.delete(
+            request=request, db_session=db_session, db_obj=db_category
+        )
         return
     except CategoryNotFound:
         raise
@@ -147,9 +165,9 @@ async def remove_category(db_session: DBSession, category_id: UUID4):
     response_model=List[ProductOutMinimalSchema],
     dependencies=[Depends(ProductPermissions.read)],
 )
-async def read_products(db_session: DBSession):
+async def read_products(request: Request, db_session: DBSession):
     try:
-        result = await product_crud.list(db_session=db_session)
+        result = await product_crud.list(request=request, db_session=db_session)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch products: {str(e)}")
@@ -161,9 +179,11 @@ async def read_products(db_session: DBSession):
     response_model=ProductOutSchema,
     dependencies=[Depends(ProductPermissions.read)],
 )
-async def read_product(db_session: DBSession, product_id: UUID4):
+async def read_product(request: Request, db_session: DBSession, product_id: UUID4):
     try:
-        result = await product_crud.get(db_session=db_session, id=product_id)
+        result = await product_crud.get(
+            request=request, db_session=db_session, id=product_id
+        )
         if result is None:
             raise ProductNotFound()
         return result
@@ -180,14 +200,18 @@ async def read_product(db_session: DBSession, product_id: UUID4):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(ProductPermissions.create)],
 )
-async def add_product(db_session: DBSession, product: ProductCreateSchema):
+async def add_product(
+    request: Request, db_session: DBSession, product: ProductCreateSchema
+):
     try:
         db_obj = await product_crud.get_by_name(
             db_session=db_session, name=product.name
         )
         if db_obj is not None:
             raise ProductNameExists()
-        result = await product_crud.create(db_session=db_session, product=product)
+        result = await product_crud.create(
+            request=request, db_session=db_session, product=product
+        )
         return result
     except ProductNameExists:
         raise
@@ -202,10 +226,15 @@ async def add_product(db_session: DBSession, product: ProductCreateSchema):
     dependencies=[Depends(ProductPermissions.update)],
 )
 async def edit_product(
-    db_session: DBSession, product: ProductUpdateSchema, product_id: UUID4
+    request: Request,
+    db_session: DBSession,
+    product: ProductUpdateSchema,
+    product_id: UUID4,
 ):
     try:
-        db_product = await product_crud.get(db_session=db_session, id=product_id)
+        db_product = await product_crud.get(
+            request=request, db_session=db_session, id=product_id
+        )
         if db_product is None:
             raise ProductNotFound()
         if db_product != product.name:
@@ -215,7 +244,10 @@ async def edit_product(
             if existing_product is not None and existing_product.id != product_id:
                 raise ProductNameExists()
         updated_product = await product_crud.update(
-            db_session=db_session, product=product, db_product=db_product
+            request=request,
+            db_session=db_session,
+            product=product,
+            db_product=db_product,
         )
         return updated_product
     except (ProductNotFound, ProductNameExists):
@@ -230,12 +262,16 @@ async def edit_product(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(ProductPermissions.delete)],
 )
-async def remove_product(db_session: DBSession, product_id: UUID4):
+async def remove_product(request: Request, db_session: DBSession, product_id: UUID4):
     try:
-        db_product = await product_crud.get(db_session=db_session, id=product_id)
+        db_product = await product_crud.get(
+            request=request, db_session=db_session, id=product_id
+        )
         if db_product is None:
             raise ProductNotFound()
-        await product_crud.delete(db_session=db_session, db_obj=db_product)
+        await product_crud.delete(
+            request=request, db_session=db_session, db_obj=db_product
+        )
         return
     except ProductNotFound:
         raise
@@ -249,9 +285,9 @@ async def remove_product(db_session: DBSession, product_id: UUID4):
     response_model=List[SubCategoryOutMinimalSchema],
     dependencies=[Depends(SubCategoryPermissions.read)],
 )
-async def read_sub_categories(db_session: DBSession):
+async def read_sub_categories(request: Request, db_session: DBSession):
     try:
-        result = await sub_category_crud.list(db_session=db_session)
+        result = await sub_category_crud.list(request=request, db_session=db_session)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch sub_categories: {str(e)}")
@@ -263,9 +299,13 @@ async def read_sub_categories(db_session: DBSession):
     response_model=SubCategoryOutSchema,
     dependencies=[Depends(SubCategoryPermissions.read)],
 )
-async def read_sub_category(db_session: DBSession, sub_category_id: UUID4):
+async def read_sub_category(
+    request: Request, db_session: DBSession, sub_category_id: UUID4
+):
     try:
-        result = await sub_category_crud.get(db_session=db_session, id=sub_category_id)
+        result = await sub_category_crud.get(
+            request=request, db_session=db_session, id=sub_category_id
+        )
         if result is None:
             raise SubCategoryNotFound()
         return result
@@ -283,7 +323,7 @@ async def read_sub_category(db_session: DBSession, sub_category_id: UUID4):
     dependencies=[Depends(SubCategoryPermissions.create)],
 )
 async def add_sub_category(
-    db_session: DBSession, sub_category: SubCategoryCreateSchema
+    request: Request, db_session: DBSession, sub_category: SubCategoryCreateSchema
 ):
     try:
         db_obj = await sub_category_crud.get_by_name(
@@ -292,7 +332,7 @@ async def add_sub_category(
         if db_obj is not None:
             raise SubCategoryNameExists()
         result = await sub_category_crud.create(
-            db_session=db_session, schema=sub_category
+            request=request, db_session=db_session, schema=sub_category
         )
         return result
     except SubCategoryNameExists:
@@ -308,11 +348,14 @@ async def add_sub_category(
     dependencies=[Depends(SubCategoryPermissions.update)],
 )
 async def edit_sub_category(
-    db_session: DBSession, sub_category: SubCategoryUpdateSchema, sub_category_id: UUID4
+    request: Request,
+    db_session: DBSession,
+    sub_category: SubCategoryUpdateSchema,
+    sub_category_id: UUID4,
 ):
     try:
         db_sub_category = await sub_category_crud.get(
-            db_session=db_session, id=sub_category_id
+            request=request, db_session=db_session, id=sub_category_id
         )
         if db_sub_category is None:
             raise SubCategoryNotFound()
@@ -326,6 +369,7 @@ async def edit_sub_category(
             ):
                 raise SubCategoryNameExists()
         updated_sub_category = await sub_category_crud.update(
+            request=request,
             db_session=db_session,
             schema=sub_category,
             db_obj=db_sub_category,
@@ -343,14 +387,18 @@ async def edit_sub_category(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(SubCategoryPermissions.delete)],
 )
-async def remove_sub_category(db_session: DBSession, sub_category_id: UUID4):
+async def remove_sub_category(
+    request: Request, db_session: DBSession, sub_category_id: UUID4
+):
     try:
         db_sub_category = await sub_category_crud.get(
-            db_session=db_session, id=sub_category_id
+            request=request, db_session=db_session, id=sub_category_id
         )
         if db_sub_category is None:
             raise SubCategoryNotFound()
-        await sub_category_crud.delete(db_session=db_session, db_obj=db_sub_category)
+        await sub_category_crud.delete(
+            request=request, db_session=db_session, db_obj=db_sub_category
+        )
         return
     except SubCategoryNotFound:
         raise

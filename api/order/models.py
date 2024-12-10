@@ -32,7 +32,7 @@ class Order(BaseTimeStamp):
     guest_email = Column(String(255))
 
     lines = relationship("OrderLine", backref="order")
-    user = relationship("User", back_populates="orders")
+    user = relationship("User", backref="orders")
 
 
 class OrderLine(BaseUUID):

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, List, Union
 
-from pydantic import UUID4, BaseModel, Field
+from pydantic import UUID4, BaseModel, Field, ConfigDict
 
 from .constant import Status
 
@@ -27,8 +27,8 @@ class ExportCreateSchema(BaseModel):
     file_format: str = "xlsx"  # xlsx, csv, json
     created_by: UUID4 | None = None
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "model_name": "User",
                 "filters": [
@@ -44,6 +44,7 @@ class ExportCreateSchema(BaseModel):
                 "file_format": "xlsx",
             }
         }
+    )
 
 
 class ExportOutSchema(BaseExportSchema):

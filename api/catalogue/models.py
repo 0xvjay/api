@@ -18,7 +18,7 @@ class Category(BaseUUID):
     name = Column(String(255), index=True)
     is_active = Column(Boolean, default=True)
 
-    sub_categories = relationship("SubCategory", backref="category", lazy="joined")
+    sub_categories = relationship("SubCategory", backref="category")
 
 
 class SubCategory(BaseUUID):
@@ -33,7 +33,6 @@ class SubCategory(BaseUUID):
         "Product",
         secondary="catalogue_subcategory_product",
         back_populates="sub_categories",
-        lazy="joined",
     )
 
     def __init__(self, *args, **kwargs):
@@ -58,7 +57,6 @@ class Product(BaseTimeStamp):
         "SubCategory",
         secondary="catalogue_subcategory_product",
         back_populates="products",
-        lazy="joined",
     )
     lines = relationship("OrderLine", back_populates="product")
 

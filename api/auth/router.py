@@ -2,15 +2,16 @@ import logging
 from datetime import timedelta
 from typing import List
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import UUID4
 
 from api.config import settings
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 from api.user.exceptions import UserNotFound
-from .permissions import GroupPermissions
+
 from .exceptions import GroupExists, GroupNotFound
+from .permissions import GroupPermissions
 from .schemas import (
     AuthSchema,
     GroupCreateSchema,
@@ -62,13 +63,17 @@ async def login(
     dependencies=[Depends(GroupPermissions.read)],
 )
 async def read_groups(
+    request: Request,
     db_session: DBSession,
     query_str: str | None = None,
     order_by: str | None = None,
 ):
     try:
         result = await group_crud.list(
-            db_session=db_session, query_str=query_str, order_by=order_by
+            request=request,
+            db_session=db_session,
+            query_str=query_str,
+            order_by=order_by,
         )
         return result
     except Exception as e:
@@ -81,9 +86,11 @@ async def read_groups(
     response_model=GroupOutSchema,
     dependencies=[Depends(GroupPermissions.read)],
 )
-async def read_group(db_session: DBSession, group_id: UUID4):
+async def read_group(request: Request, db_session: DBSession, group_id: UUID4):
     try:
-        result = await group_crud.get(db_session=db_session, id=group_id)
+        result = await group_crud.get(
+            request=request, db_session=db_session, id=group_id
+        )
         if result is None:
             raise GroupNotFound()
         return result
@@ -100,12 +107,14 @@ async def read_group(db_session: DBSession, group_id: UUID4):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(GroupPermissions.create)],
 )
-async def add_group(db_session: DBSession, group: GroupCreateSchema):
+async def add_group(request: Request, db_session: DBSession, group: GroupCreateSchema):
     try:
         db_obj = await group_crud.get_by_name(db_session=db_session, name=group.name)
         if db_obj is not None:
             raise GroupExists()
-        result = await group_crud.create(db_session=db_session, group=group)
+        result = await group_crud.create(
+            request=request, db_session=db_session, group=group
+        )
         return result
     except GroupExists:
         raise
@@ -119,9 +128,13 @@ async def add_group(db_session: DBSession, group: GroupCreateSchema):
     response_model=GroupOutMinimalSchema,
     dependencies=[Depends(GroupPermissions.update)],
 )
-async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: UUID4):
+async def edit_group(
+    request: Request, db_session: DBSession, group: GroupUpdateSchema, group_id: UUID4
+):
     try:
-        db_group = await group_crud.get(db_session=db_session, id=group_id)
+        db_group = await group_crud.get(
+            request=request, db_session=db_session, id=group_id
+        )
         if db_group is None:
             raise GroupNotFound()
         if db_group != group.name:
@@ -131,7 +144,7 @@ async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: 
             if existing_group is not None and existing_group.id != group_id:
                 raise GroupExists()
         updated_group = await group_crud.update(
-            db_session=db_session, group=group, db_group=db_group
+            request=request, db_session=db_session, group=group, db_group=db_group
         )
         return updated_group
     except (GroupExists, GroupNotFound):
@@ -146,12 +159,14 @@ async def edit_group(db_session: DBSession, group: GroupUpdateSchema, group_id: 
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(GroupPermissions.delete)],
 )
-async def remove_group(db_session: DBSession, group_id: UUID4):
+async def remove_group(request: Request, db_session: DBSession, group_id: UUID4):
     try:
-        db_group = await group_crud.get(db_session=db_session, id=group_id)
+        db_group = await group_crud.get(
+            request=request, db_session=db_session, id=group_id
+        )
         if db_group is None:
             raise GroupNotFound()
-        await group_crud.delete(db_session=db_session, db_obj=db_group)
+        await group_crud.delete(request=request, db_session=db_session, db_obj=db_group)
         return
     except GroupNotFound:
         raise

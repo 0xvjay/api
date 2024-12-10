@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Callable, List, Type
 
 import pandas as pd
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, Request
 from sqlalchemy import Select, asc, desc, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
@@ -157,12 +157,15 @@ class CRUDExport(CRUDBase[Export, ExportCreateSchema, Any]):
 
     async def create(
         self,
+        request: Request,
         db_session: AsyncSession,
         schema: ExportCreateSchema,
         background_tasks: BackgroundTasks,
         query_builder: Callable | None = None,
     ) -> Export:
         """Create export record and schedule background processing"""
+        await self._create_add_log(request=request, db_session=db_session)
+
         db_export = Export(
             status=Status.CREATED,
             user_id=schema.created_by,
@@ -193,4 +196,4 @@ class CRUDExport(CRUDBase[Export, ExportCreateSchema, Any]):
         return models[model_name]
 
 
-export_crud = CRUDExport(Export)
+export_crud = CRUDExport(Export, "Export")

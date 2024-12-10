@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
     response_model=List[ExportOutSchema],
     dependencies=[Depends(ExportPermissions.read)],
 )
-async def read_exports(db_session: DBSession):
+async def read_exports(request: Request, db_session: DBSession):
     try:
-        result = await export_crud.list(db_session=db_session)
+        result = await export_crud.list(request=request, db_session=db_session)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch exports: {str(e)}")
@@ -43,7 +43,10 @@ async def add_export(
     try:
         export.created_by = request.state.user.id
         result = await export_crud.create(
-            db_session=db_session, schema=export, background_tasks=background_tasks
+            request=request,
+            db_session=db_session,
+            schema=export,
+            background_tasks=background_tasks,
         )
         return {
             "message": "Export started successfully",

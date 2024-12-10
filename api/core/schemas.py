@@ -10,7 +10,7 @@ class AdminLogOutSchema(BaseModel):
     user_id: UUID4
     action: PermissionAction
     object: str
-    description: str
+    description: str | None
 
     created_at: datetime
     updated_at: datetime | None = None

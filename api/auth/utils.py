@@ -5,12 +5,16 @@ import jwt
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from api.config import settings
 from api.database import DBSession
 from api.exceptions import NotAuthenticated
+from api.user.models import User
 from api.user.service import user_crud
 
+from .models import Group
 from .schemas import JWTSchema
 from .security import verify_password
 
@@ -66,7 +70,12 @@ async def get_current_user(db_session: DBSession, token: str = Depends(oauth2_sc
         token_data = JWTSchema(sub=user_id)
     except InvalidTokenError:
         raise NotAuthenticated()
-    user = await user_crud.get(db_session=db_session, id=token_data.id)
+    result = await db_session.execute(
+        select(User)
+        .options(joinedload(User.groups).joinedload(Group.permissions))
+        .where(User.id == token_data.id)
+    )
+    user = result.unique().scalar_one_or_none()
     if user is None:
         raise NotAuthenticated()
     return user

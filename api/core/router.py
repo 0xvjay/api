@@ -20,9 +20,19 @@ router = APIRouter(tags=["logs"])
     response_model=List[AdminLogOutSchema],
     dependencies=[Depends(AdminLogPermissions.read)],
 )
-async def read_logs(request: Request, db_session: DBSession):
+async def read_logs(
+    request: Request,
+    db_session: DBSession,
+    query_str: str | None = None,
+    order_by: str | None = None,
+):
     try:
-        result = await admin_log_crud.list(db_session=db_session, request=request)
+        result = await admin_log_crud.list(
+            db_session=db_session,
+            request=request,
+            query_str=query_str,
+            order_by=order_by,
+        )
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch admin logs: {str(e)}")
@@ -34,9 +44,9 @@ async def read_logs(request: Request, db_session: DBSession):
     response_model=SiteSettingOutSchema,
     dependencies=[Depends(SiteSettingPermissions.read)],
 )
-async def read_site_settings(db_session: DBSession):
+async def read_site_settings(request: Request, db_session: DBSession):
     try:
-        result = await site_setting_crud.get(db_session=db_session)
+        result = await site_setting_crud.get(request=request, db_session=db_session)
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch site settings: {str(e)}")
@@ -49,11 +59,11 @@ async def read_site_settings(db_session: DBSession):
     dependencies=[Depends(SiteSettingPermissions.update)],
 )
 async def edit_site_settings(
-    db_session: DBSession, site_setting: SiteSettingUpdateSchema
+    request: Request, db_session: DBSession, site_setting: SiteSettingUpdateSchema
 ):
     try:
         result = await site_setting_crud.update(
-            db_session=db_session, site_setting=site_setting
+            request=request, db_session=db_session, site_setting=site_setting
         )
         return result
     except Exception as e:

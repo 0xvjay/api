@@ -1,5 +1,6 @@
 from typing import List
 
+from fastapi import Request
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,8 +23,9 @@ class CRUDCategory(CRUDBase[Category, CategoryCreateSchema, CategoryUpdateSchema
         return result.unique().scalar_one_or_none()
 
     async def create(
-        self, db_session: AsyncSession, category: CategoryCreateSchema
+        self, request: Request, db_session: AsyncSession, category: CategoryCreateSchema
     ) -> Category:
+        await self._create_add_log(request=request, db_session=db_session)
         db_category = Category(**category.model_dump(exclude={"sub_categories"}))
 
         if category.sub_categories:
@@ -46,10 +48,12 @@ class CRUDCategory(CRUDBase[Category, CategoryCreateSchema, CategoryUpdateSchema
 
     async def update(
         self,
+        request: Request,
         db_session: AsyncSession,
         db_category: Category,
         category: CategoryUpdateSchema,
     ) -> Category:
+        await self._create_update_log(request=request, db_session=db_session)
         for key, value in category.model_dump(exclude={"sub_categories"}).items():
             setattr(db_category, key, value)
 
@@ -90,10 +94,12 @@ class CRUDProduct(CRUDBase[Product, ProductCreateSchema, ProductUpdateSchema]):
 
     async def list(
         self,
+        request: Request,
         db_session: AsyncSession,
         query_str: str | None = None,
         order_by: str | None = None,
     ) -> List[Product]:
+        await self._create_list_log(request=request, db_session=db_session)
         query = select(Product)
 
         if query_str:
@@ -119,8 +125,9 @@ class CRUDProduct(CRUDBase[Product, ProductCreateSchema, ProductUpdateSchema]):
         return result.unique().scalars().all()
 
     async def create(
-        self, db_session: AsyncSession, product: ProductCreateSchema
+        self, request: Request, db_session: AsyncSession, product: ProductCreateSchema
     ) -> Product:
+        await self._create_add_log(request=request, db_session=db_session)
         db_product = Product(**product.model_dump(exclude={"sub_categories"}))
 
         if product.sub_categories:
@@ -143,10 +150,12 @@ class CRUDProduct(CRUDBase[Product, ProductCreateSchema, ProductUpdateSchema]):
 
     async def update(
         self,
+        request: Request,
         db_session: AsyncSession,
         db_product: Product,
         product: ProductUpdateSchema,
     ) -> Product:
+        await self._create_update_log(request=request, db_session=db_session)
         for key, value in product.model_dump(exclude={"sub_categories"}).items():
             setattr(db_product, key, value)
 
@@ -168,6 +177,6 @@ class CRUDProduct(CRUDBase[Product, ProductCreateSchema, ProductUpdateSchema]):
         return db_product
 
 
-category_crud = CRUDCategory(Category)
-sub_category_crud = CRUDSubCategory(SubCategory)
-product_crud = CRUDProduct(Product)
+category_crud = CRUDCategory(Category, "Category")
+sub_category_crud = CRUDSubCategory(SubCategory, "Sub Category")
+product_crud = CRUDProduct(Product, "Product")

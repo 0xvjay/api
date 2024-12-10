@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import UUID4
 
 from api.auth.permissions import OrderPermissions
@@ -27,11 +27,17 @@ logger = logging.getLogger(__name__)
     dependencies=[Depends(OrderPermissions.read)],
 )
 async def read_orders(
-    db_session: DBSession, query_str: str | None = None, order_by: str | None = None
+    request: Request,
+    db_session: DBSession,
+    query_str: str | None = None,
+    order_by: str | None = None,
 ):
     try:
         result = await order_crud.list(
-            db_session=db_session, query_str=query_str, order_by=order_by
+            request=request,
+            db_session=db_session,
+            query_str=query_str,
+            order_by=order_by,
         )
         return result
     except Exception as e:
@@ -44,9 +50,11 @@ async def read_orders(
     response_model=OrderOutSchema,
     dependencies=[Depends(OrderPermissions.read)],
 )
-async def read_order(db_session: DBSession, order_id: UUID4):
+async def read_order(request: Request, db_session: DBSession, order_id: UUID4):
     try:
-        result = await order_crud.get(db_session=db_session, id=order_id)
+        result = await order_crud.get(
+            request=request, db_session=db_session, id=order_id
+        )
         if result is None:
             raise OrderNotFound()
         return result
@@ -62,9 +70,11 @@ async def read_order(db_session: DBSession, order_id: UUID4):
     response_model=OrderCreateSchema,
     dependencies=[Depends(OrderPermissions.create)],
 )
-async def add_order(db_session: DBSession, order: OrderCreateSchema):
+async def add_order(request: Request, db_session: DBSession, order: OrderCreateSchema):
     try:
-        result = await order_crud.create(db_session=db_session, order=order)
+        result = await order_crud.create(
+            request=request, db_session=db_session, order=order
+        )
         return result
     except Exception as e:
         logger.exception(f"Failed to create order: {str(e)}")
@@ -76,13 +86,17 @@ async def add_order(db_session: DBSession, order: OrderCreateSchema):
     response_model=OrderOutMinimalSchema,
     dependencies=[Depends(OrderPermissions.update)],
 )
-async def edit_order(db_session: DBSession, order: OrderUpdateSchema, order_id: UUID4):
+async def edit_order(
+    request: Request, db_session: DBSession, order: OrderUpdateSchema, order_id: UUID4
+):
     try:
-        db_order = await order_crud.get(db_session=db_session, id=order_id)
+        db_order = await order_crud.get(
+            request=request, db_session=db_session, id=order_id
+        )
         if db_order is None:
             raise OrderNotFound()
         result = await order_crud.update(
-            db_session=db_session, db_order=db_order, order=order
+            request=request, db_session=db_session, db_order=db_order, order=order
         )
         return result
     except OrderNotFound:

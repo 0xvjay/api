@@ -48,7 +48,6 @@ class Group(BaseTimeStamp):
         "Permission",
         secondary="auth_group_permission",
         back_populates="groups",
-        lazy="joined",
     )
     users = relationship("User", secondary="auth_user_group", back_populates="groups")
 

@@ -22,6 +22,7 @@ def allow_self_access(
             current_user: User = request.state.user
             target_id = kwargs.get(user_id_param)
 
+            print(current_user.id, target_id)
             if not current_user or current_user.id != target_id:
                 if not BasePermissionDependency.has_permission(
                     current_user, permission_action, permission_object

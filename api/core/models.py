@@ -1,6 +1,8 @@
 from sqlalchemy import UUID, Boolean, Column, Enum, ForeignKey, String, Text
+from sqlalchemy.orm import relationship
 
 from api.models import BaseTimeStamp, BaseUUID
+
 from .constant import Action
 
 
@@ -11,6 +13,8 @@ class AdminLog(BaseTimeStamp):
     action = Column(Enum(Action))
     object = Column(String(255))
     description = Column(Text)
+
+    user = relationship("User", backref="admin_logs")
 
 
 class SiteSetting(BaseUUID):

@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import List
 
+from fastapi import Request
 from pydantic import UUID4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +15,10 @@ from .schemas import OrderCreateSchema, OrderUpdateSchema
 
 
 class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
-    async def get(self, db_session: AsyncSession, id: UUID4) -> Order | None:
+    async def get(
+        self, request: Request, db_session: AsyncSession, id: UUID4
+    ) -> Order | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
         result = await db_session.execute(
             select(Order)
             .where(Order.id == id)
@@ -25,7 +29,10 @@ class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
         )
         return result.unique().scalar_one_or_none()
 
-    async def create(self, db_session: AsyncSession, order: OrderCreateSchema) -> Order:
+    async def create(
+        self, request: Request, db_session: AsyncSession, order: OrderCreateSchema
+    ) -> Order:
+        await self._create_add_log(request=request, db_session=db_session)
         total_excl_tax = Decimal(0)
         total_incl_tax = Decimal(0)
 
@@ -72,8 +79,13 @@ class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
         return db_order
 
     async def update(
-        self, db_session: AsyncSession, db_order: Order, order: OrderUpdateSchema
+        self,
+        request: Request,
+        db_session: AsyncSession,
+        db_order: Order,
+        order: OrderUpdateSchema,
     ) -> Order:
+        await self._create_update_log(request=request, db_session=db_session)
         if order.guest_email is not None:
             db_order.guest_email = order.guest_email
 
@@ -84,10 +96,11 @@ class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
         return db_order
 
     async def get_user_orders(
-        self, db_session: AsyncSession, user_id: UUID4
+        self, request: Request, db_session: AsyncSession, user_id: UUID4
     ) -> List[Order]:
+        await self._create_list_log(request=request, db_session=db_session)
         result = await db_session.execute(select(Order).where(Order.user_id == user_id))
         return result
 
 
-order_crud = CRUDOrder(Order)
+order_crud = CRUDOrder(Order, "Order")

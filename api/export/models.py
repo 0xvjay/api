@@ -1,4 +1,6 @@
 from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, String
+from sqlalchemy.orm import relationship
+
 from api.models import BaseTimeStamp
 
 from .constant import Status
@@ -12,3 +14,5 @@ class Export(BaseTimeStamp):
     started_at = Column(DateTime(timezone=True))
     finished_at = Column(DateTime(timezone=True))
     user_id = Column(UUID, ForeignKey("user_user.id"))
+
+    created_by = relationship("User", backref="exports")

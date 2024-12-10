@@ -37,14 +37,16 @@ logger = logging.getLogger(__name__)
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(UserPermissions.create)],
 )
-async def add_user(db_session: DBSession, user: UserCreateSchema):
+async def add_user(request: Request, db_session: DBSession, user: UserCreateSchema):
     try:
         db_obj = await user_crud.get_by_email_or_username(
             db_session=db_session, email=user.email, username=user.username
         )
         if db_obj is not None:
             raise UserEmailOrNameExists()
-        result = await user_crud.create(db_session=db_session, user=user)
+        result = await user_crud.create(
+            request=request, db_session=db_session, user=user
+        )
         return result
     except UserEmailOrNameExists:
         raise
@@ -59,10 +61,18 @@ async def add_user(db_session: DBSession, user: UserCreateSchema):
     dependencies=[Depends(UserPermissions.read)],
 )
 async def read_users(
-    db_session: DBSession, query_str: str | None = None, order_by: str | None = None
+    request: Request,
+    db_session: DBSession,
+    query_str: str | None = None,
+    order_by: str | None = None,
 ):
     try:
-        result = await user_crud.list(db_session=db_session, query_str=query_str)
+        result = await user_crud.list(
+            request=request,
+            db_session=db_session,
+            query_str=query_str,
+            order_by=order_by,
+        )
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch users: {str(e)}")
@@ -73,7 +83,7 @@ async def read_users(
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER)
 async def read_user(request: Request, db_session: DBSession, user_id: UUID4):
     try:
-        result = await user_crud.get(db_session=db_session, id=user_id)
+        result = await user_crud.get(request=request, db_session=db_session, id=user_id)
         if result is None:
             raise UserNotFound()
         return result
@@ -90,7 +100,9 @@ async def edit_user(
     request: Request, db_session: DBSession, user: UserUpdateSchema, user_id: UUID4
 ):
     try:
-        db_user = await user_crud.get(db_session=db_session, id=user_id)
+        db_user = await user_crud.get(
+            request=request, db_session=db_session, id=user_id
+        )
         if db_user is None:
             raise UserNotFound()
         if db_user.email != user.email or db_user.username != user.username:
@@ -100,7 +112,7 @@ async def edit_user(
         if db_obj is not None and user.id != user_id:
             raise UserEmailOrNameExists()
         result = await user_crud.update(
-            db_session=db_session, user=user, db_user=db_user
+            request=request, db_session=db_session, user=user, db_user=db_user
         )
         return result
     except (UserEmailOrNameExists, UserNotFound):
@@ -115,12 +127,14 @@ async def edit_user(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(UserPermissions.delete)],
 )
-async def remove_user(db_session: DBSession, user_id: UUID4):
+async def remove_user(request: Request, db_session: DBSession, user_id: UUID4):
     try:
-        db_user = await user_crud.get(db_session=db_session, id=user_id)
+        db_user = await user_crud.get(
+            request=request, db_session=db_session, id=user_id
+        )
         if db_user is None:
             raise UserNotFound()
-        await user_crud.delete(db_session=db_session, db_obj=db_user)
+        await user_crud.delete(request=request, db_session=db_session, db_obj=db_user)
         return
     except UserNotFound:
         raise
@@ -133,7 +147,9 @@ async def remove_user(db_session: DBSession, user_id: UUID4):
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER_ADDRESS)
 async def read_user_addresses(request: Request, db_session: DBSession, user_id: UUID4):
     try:
-        result = await user_address_crud.list(db_session=db_session, user_id=user_id)
+        result = await user_address_crud.list(
+            request=request, db_session=db_session, user_id=user_id
+        )
         return result
     except Exception as e:
         logger.exception(f"Failed to fetch user addresses of user {user_id}: {str(e)}")
@@ -150,7 +166,7 @@ async def read_user_address(
 ):
     try:
         result = await user_address_crud.get(
-            db_session=db_session, id=user_address_id, user_id=user_id
+            request=request, db_session=db_session, id=user_address_id, user_id=user_id
         )
         if result is None:
             raise UserAddressNotFound()
@@ -178,7 +194,7 @@ async def add_user_address(
 ):
     try:
         result = await user_address_crud.create(
-            db_session=db_session, schema=user_address, user_id=user_id
+            request=request, db_session=db_session, schema=user_address, user_id=user_id
         )
         return result
     except Exception as e:
@@ -199,12 +215,15 @@ async def edit_user_address(
 ):
     try:
         db_user_address = await user_address_crud.get(
-            db_session=db_session, id=user_address_id, user_id=user_id
+            request=request, db_session=db_session, id=user_address_id, user_id=user_id
         )
         if db_user_address is None:
             raise UserAddressNotFound()
         updated_user_address = await user_address_crud.update(
-            db_session=db_session, db_obj=db_user_address, schema=user_address
+            request=request,
+            db_session=db_session,
+            db_obj=db_user_address,
+            schema=user_address,
         )
         return updated_user_address
     except UserAddressNotFound:
@@ -226,11 +245,13 @@ async def remove_user_address(
 ):
     try:
         db_user_address = await user_address_crud.get(
-            db_session=db_session, id=user_address_id, user_id=user_id
+            request=request, db_session=db_session, id=user_address_id, user_id=user_id
         )
         if db_user_address is None:
             raise UserAddressNotFound()
-        await user_address_crud.delete(db_session=db_session, db_obj=db_user_address)
+        await user_address_crud.delete(
+            request=request, db_session=db_session, db_obj=db_user_address
+        )
         return
     except Exception as e:
         logger.exception(
@@ -244,7 +265,7 @@ async def remove_user_address(
 async def read_user_orders(request: Request, db_session: DBSession, user_id: UUID4):
     try:
         result = await order_crud.get_user_orders(
-            db_session=db_session, user_id=user_id
+            request=request, db_session=db_session, user_id=user_id
         )
         return result
     except Exception as e:
