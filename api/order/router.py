@@ -67,7 +67,7 @@ async def read_order(request: Request, db_session: DBSession, order_id: UUID4):
 
 @router.post(
     "/",
-    response_model=OrderCreateSchema,
+    response_model=OrderOutMinimalSchema,
     dependencies=[Depends(OrderPermissions.create)],
 )
 async def add_order(request: Request, db_session: DBSession, order: OrderCreateSchema):

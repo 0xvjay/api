@@ -51,4 +51,4 @@ class OrderLine(BaseUUID):
     unit_price_incl_tax = Column(Numeric(12, 2))
     unit_price_excl_tax = Column(Numeric(12, 2))
 
-    product = relationship("Product", back_populates="lines")
+    product = relationship("Product", backref="lines")

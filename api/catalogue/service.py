@@ -1,8 +1,10 @@
 from typing import List
 
 from fastapi import Request
+from pydantic import UUID4
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.core.crud import CRUDBase
 
@@ -18,6 +20,43 @@ from .schemas import (
 
 
 class CRUDCategory(CRUDBase[Category, CategoryCreateSchema, CategoryUpdateSchema]):
+    async def get(
+        self, request: Request, db_session: AsyncSession, id: UUID4
+    ) -> Category | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
+        result = await db_session.execute(
+            select(Category)
+            .options(joinedload(Category.sub_categories))
+            .where(Category.id == id)
+        )
+        return result.unique().scalar_one_or_none()
+
+    async def list(
+        self,
+        request: Request,
+        db_session: AsyncSession,
+        query_str: str | None = None,
+        order_by: str | None = None,
+    ) -> List[Category]:
+        await self._create_list_log(request=request, db_session=db_session)
+        query = select(Category).options(joinedload(Category.sub_categories))
+
+        if query_str:
+            query = query.where(Category.name.contains(query_str))
+
+        if order_by:
+            order_criteria = []
+            fields = [field.strip() for field in order_by.split(",")]
+            for field in fields:
+                if field.startswith("-"):
+                    order_criteria.append(desc(getattr(Category, field[1:])))
+                else:
+                    order_criteria.append(getattr(Category, field))
+            query = query.order_by(*order_criteria)
+
+        result = await db_session.execute(query)
+        return result.unique().scalars().all()
+
     async def get_by_name(self, db_session: AsyncSession, name: str) -> Category | None:
         result = await db_session.execute(select(Category).where(Category.name == name))
         return result.unique().scalar_one_or_none()
@@ -43,8 +82,13 @@ class CRUDCategory(CRUDBase[Category, CategoryCreateSchema, CategoryUpdateSchema
 
         db_session.add(db_category)
         await db_session.commit()
-        await db_session.refresh(db_category)
-        return db_category
+
+        result = await db_session.execute(
+            select(Category)
+            .options(joinedload(Category.sub_categories))
+            .where(Category.id == db_category.id)
+        )
+        return result.unique().scalar_one()
 
     async def update(
         self,
@@ -78,6 +122,17 @@ class CRUDCategory(CRUDBase[Category, CategoryCreateSchema, CategoryUpdateSchema
 class CRUDSubCategory(
     CRUDBase[SubCategory, SubCategoryCreateSchema, SubCategoryUpdateSchema]
 ):
+    async def get(
+        self, request: Request, db_session: AsyncSession, id: UUID4
+    ) -> SubCategory | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
+        result = await db_session.execute(
+            select(SubCategory)
+            .options(joinedload(SubCategory.products))
+            .where(SubCategory.id == id)
+        )
+        return result.unique().scalar_one_or_none()
+
     async def get_by_name(
         self, db_session: AsyncSession, name: str
     ) -> SubCategory | None:
@@ -88,6 +143,17 @@ class CRUDSubCategory(
 
 
 class CRUDProduct(CRUDBase[Product, ProductCreateSchema, ProductUpdateSchema]):
+    async def get(
+        self, request: Request, db_session: AsyncSession, id: UUID4
+    ) -> Product | None:
+        await self._create_get_log(request=request, db_session=db_session, id=id)
+        result = await db_session.execute(
+            select(Product)
+            .options(joinedload(Product.sub_categories))
+            .where(Product.id == id)
+        )
+        return result.unique().scalar_one_or_none()
+
     async def get_by_name(self, db_session: AsyncSession, name: str) -> Product | None:
         result = await db_session.execute(select(Product).where(Product.name == name))
         return result.unique().scalar_one_or_none()

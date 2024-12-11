@@ -58,7 +58,6 @@ class Product(BaseTimeStamp):
         secondary="catalogue_subcategory_product",
         back_populates="products",
     )
-    lines = relationship("OrderLine", back_populates="product")
 
     def __init__(self, *args, **kwargs):
         if "slug" not in kwargs:
