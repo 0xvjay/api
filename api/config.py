@@ -11,12 +11,14 @@ load_dotenv()
 
 class DBConfig(BaseSettings):
     DB_NAME: str = os.getenv("DB_NAME", "api")
+    TEST_DB_NAME: str = os.getenv("TEST_DB_NAME", "api")
     DB_USER: str = os.getenv("DB_USER", "admin")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
 
     SQLALCHEMY_DATABASE_URL: str = f"postgresql+asyncpg://{DB_USER}:{quote(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    SQLALCHEMY_TEST_DATABASE_URL: str = f"postgresql+asyncpg://{DB_USER}:{quote(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{TEST_DB_NAME}"
 
 
 class Config(BaseSettings):

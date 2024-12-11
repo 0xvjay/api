@@ -1,6 +1,5 @@
 import asyncio
 from typing import AsyncGenerator
-from urllib.parse import quote
 
 import pytest
 import pytest_asyncio
@@ -8,15 +7,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+from api.config import db_settings
 from api.database import Base, get_db
 from api.main import app
 
-TEST_DB_URL = (
-    f"postgresql+asyncpg://postgres:{quote('Dev@123')}@localhost:5432/test_api"
-)
-
 engine = create_async_engine(
-    TEST_DB_URL,
+    db_settings.SQLALCHEMY_TEST_DATABASE_URL,
     echo=False,
     future=True,
     pool_pre_ping=True,
