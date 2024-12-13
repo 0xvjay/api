@@ -13,6 +13,6 @@ class Export(BaseTimeStamp):
     status = Column(Enum(Status), default=Status.CREATED)
     started_at = Column(DateTime(timezone=True))
     finished_at = Column(DateTime(timezone=True))
-    user_id = Column(UUID, ForeignKey("user_user.id"))
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="SET NULL"))
 
     created_by = relationship("User", backref="exports")

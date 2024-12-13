@@ -19,3 +19,5 @@ class PermissionObject(StrEnum):
     ADMIN_LOG = "admin_log"
     SITE_SETTING = "site_setting"
     EXPORT = "export"
+    COMPANY = "company"
+    PROJECT = "project"

@@ -181,3 +181,17 @@ class OrderPermissions:
     create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.ORDER)
     read = BasePermissionDependency(PermissionAction.READ, PermissionObject.ORDER)
     update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.ORDER)
+
+
+class CompanyPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.COMPANY)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.COMPANY)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.COMPANY)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.COMPANY)
+
+
+class ProjectPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.PROJECT)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.PROJECT)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.PROJECT)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.PROJECT)

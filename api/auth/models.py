@@ -10,31 +10,15 @@ from .constant import PermissionAction
 class UserGroup(BaseUUID):
     __tablename__ = "auth_user_group"
 
-    group_id = Column(
-        UUID,
-        ForeignKey("auth_group.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    user_id = Column(
-        UUID,
-        ForeignKey("user_user.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
+    group_id = Column(UUID, ForeignKey("auth_group.id", ondelete="CASCADE"))
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="CASCADE"))
 
 
 class GroupPermission(BaseUUID):
     __tablename__ = "auth_group_permission"
 
-    group_id = Column(
-        UUID,
-        ForeignKey("auth_group.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    permission_id = Column(
-        UUID,
-        ForeignKey("auth_permission.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
+    group_id = Column(UUID, ForeignKey("auth_group.id", ondelete="CASCADE"))
+    permission_id = Column(UUID, ForeignKey("auth_permission.id", ondelete="CASCADE"))
 
 
 class Group(BaseTimeStamp):

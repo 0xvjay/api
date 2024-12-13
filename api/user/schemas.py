@@ -1,10 +1,12 @@
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import List
 
 from pydantic import UUID4, BaseModel, EmailStr, Field
 
-from api.auth.schemas import GroupOutMinimalSchema
 from api.address.schemas import BaseAddressSchema
+from api.auth.schemas import GroupOutMinimalSchema
+from api.catalogue.schemas import ProductOutMinimalSchema
 
 
 class BaseUserSchema(BaseModel):
@@ -50,3 +52,102 @@ class UserAddressUpdateSchema(UserAddressCreateSchema):
 
 class UserAddressOutSchema(UserAddressUpdateSchema):
     pass
+
+
+class BaseCompanySchema(BaseModel):
+    billing_code: str
+    email: str
+    is_active: bool
+
+
+class CompanyCreateSchema(BaseCompanySchema):
+    password: str
+
+
+class CompanyUpdateSchema(BaseCompanySchema):
+    id: UUID4
+
+
+class CompanyOutMinimalSchema(CompanyUpdateSchema):
+    pass
+
+
+class CompanyOutSchema(CompanyOutMinimalSchema):
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class BaseProjectSchema(BaseModel):
+    name: str
+    code: str
+    description: str | None = None
+    priority: int = 0
+    start_date: date
+    end_date: date
+
+
+class ProjectCreateSchema(BaseProjectSchema):
+    company_id: UUID4
+    products: List["ProductLimitCreateSchema"] = []
+
+
+class ProjectUpdateSchema(ProjectCreateSchema):
+    id: UUID4
+
+
+class ProjectOutMinimalSchema(BaseProjectSchema):
+    id: UUID4
+    company_id: UUID4
+
+
+class ProjectOutSchema(ProjectOutMinimalSchema):
+    company: CompanyOutMinimalSchema
+    products: List["ProductLimitOutSchema"] = []
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class BaseProductLimit(BaseModel):
+    product: ProductOutMinimalSchema
+    amount: Decimal = Field(max_digits=12, decimal_places=2)
+    absolute_limit: bool
+
+
+class ProductLimitCreateSchema(BaseProductLimit):
+    pass
+
+
+class ProductLimitUpdateSchema(ProductLimitCreateSchema):
+    id: UUID4
+    project_id: UUID4
+
+
+class ProductLimitOutMinimalSchema(ProductLimitUpdateSchema):
+    pass
+
+
+class ProductLimitOutSchema(ProductLimitOutMinimalSchema):
+    product: ProductOutMinimalSchema
+
+
+class BaseCreditSchema(BaseModel):
+    user_id: UUID4
+    project_id: UUID4
+    amount: Decimal = Field(max_length=10, decimal_places=2)
+
+
+class CreditCreateSchema(BaseCreditSchema):
+    pass
+
+
+class CreditUpdateSchema(CreditCreateSchema):
+    id: UUID4
+
+
+class CreditOutMinimalSchema(CreditUpdateSchema):
+    pass
+
+
+class CreditOutSchema(CreditOutMinimalSchema):
+    created_at: datetime
+    updated_at: datetime | None
