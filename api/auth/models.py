@@ -14,6 +14,12 @@ class UserGroup(BaseUUID):
     user_id = Column(UUID, ForeignKey("user_user.id", ondelete="CASCADE"))
 
 
+class CompanyGroup(BaseUUID):
+    __tablename__ = "auth_company_group"
+    group_id = Column(UUID, ForeignKey("auth_group.id", ondelete="CASCADE"))
+    company_id = Column(UUID, ForeignKey("user_company.id", ondelete="CASCADE"))
+
+
 class GroupPermission(BaseUUID):
     __tablename__ = "auth_group_permission"
 
@@ -34,6 +40,9 @@ class Group(BaseTimeStamp):
         back_populates="groups",
     )
     users = relationship("User", secondary="auth_user_group", back_populates="groups")
+    companies = relationship(
+        "Company", secondary="auth_company_group", back_populates="groups"
+    )
 
 
 class Permission(BaseTimeStamp):

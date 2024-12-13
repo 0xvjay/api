@@ -239,7 +239,6 @@ class CRUDProject(CRUDBase[Project, ProjectCreateSchema, ProjectUpdateSchema]):
     ) -> Project:
         await self._create_add_log(request=request, db_session=db_session)
         db_project = Project(**schema.model_dump(exclude={"products"}))
-        db_session.add(db_project)
 
         if schema.products:
             product_ids = [
@@ -249,7 +248,10 @@ class CRUDProject(CRUDBase[Project, ProjectCreateSchema, ProjectUpdateSchema]):
                 select(Product).where(Product.id.in_(product_ids))
             )
             products = products_result.unique().scalars().all()
-            db_project.products.extends(products)
+            db_project.products.extend(products)
+
+            db_session.add(db_project)
+            await db_session.flush()
 
             product_limits = [
                 ProductLimit(

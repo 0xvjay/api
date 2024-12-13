@@ -10,10 +10,9 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from api.auth.models import UserGroup  # noqa: F401
+from api.auth.models import UserGroup, CompanyGroup  # noqa: F401
 from api.models import BaseTimeStamp, BaseUUID
 
 
@@ -23,12 +22,6 @@ class AbstractUser(BaseTimeStamp):
     email = Column(String(100), nullable=False, unique=True, index=True)
     password = Column(String(128), nullable=False)
     is_active = Column(Boolean, default=True)
-
-    @declared_attr
-    def groups(cls):
-        return relationship(
-            "Group", secondary="auth_user_group", back_populates="users"
-        )
 
 
 class User(AbstractUser):
@@ -40,10 +33,9 @@ class User(AbstractUser):
     last_login = Column(DateTime(timezone=True))
     is_superuser = Column(Boolean, default=False)
 
-    company_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_company.id", ondelete="CASCADE")
-    )
+    company_id = Column(UUID, ForeignKey("user_company.id", ondelete="CASCADE"))
     company = relationship("Company", back_populates="users")
+    groups = relationship("Group", secondary="auth_user_group", back_populates="users")
 
 
 class Company(AbstractUser):
@@ -52,17 +44,16 @@ class Company(AbstractUser):
     billing_code = Column(String(255), unique=True, nullable=False)
 
     users = relationship("User", back_populates="company")
+    groups = relationship(
+        "Group", secondary="auth_company_group", back_populates="companies"
+    )
 
 
 class ProjectProduct(BaseUUID):
     __tablename__ = "user_project_product"
 
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_project.id", ondelete="CASCADE")
-    )
-    product_id = Column(
-        UUID(as_uuid=True), ForeignKey("catalogue_product.id", ondelete="CASCADE")
-    )
+    project_id = Column(UUID, ForeignKey("user_project.id", ondelete="CASCADE"))
+    product_id = Column(UUID, ForeignKey("catalogue_product.id", ondelete="CASCADE"))
 
 
 class Project(BaseTimeStamp):
@@ -74,9 +65,7 @@ class Project(BaseTimeStamp):
     priority = Column(Integer, default=0)
     start_date = Column(Date)
     end_date = Column(Date)
-    company_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_company.id", ondelete="CASCADE")
-    )
+    company_id = Column(UUID, ForeignKey("user_company.id", ondelete="CASCADE"))
 
     company = relationship("Company", backref="projects")
     products = relationship(
@@ -88,12 +77,8 @@ class Project(BaseTimeStamp):
 class TaxLimit(BaseTimeStamp):
     __tablename__ = "user_tax_limit"
 
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_project.id", ondelete="RESTRICT")
-    )
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="SET NULL")
-    )
+    project_id = Column(UUID, ForeignKey("user_project.id", ondelete="RESTRICT"))
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="SET NULL"))
     amount = Column(Numeric(12, 2))
     year = Column(Integer, default=0)
 
@@ -101,22 +86,16 @@ class TaxLimit(BaseTimeStamp):
 class Credit(BaseTimeStamp):
     __tablename__ = "user_credit"
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user_user.id", ondelete="CASCADE"))
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_project.id", ondelete="RESTRICT")
-    )
+    user_id = Column(UUID, ForeignKey("user_user.id", ondelete="CASCADE"))
+    project_id = Column(UUID, ForeignKey("user_project.id", ondelete="RESTRICT"))
     amount = Column(Numeric(12, 2))
 
 
 class Transaction(BaseTimeStamp):
     __tablename__ = "user_transaction"
 
-    credit_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_credit.id", ondelete="CASCADE")
-    )
-    order_id = Column(
-        UUID(as_uuid=True), ForeignKey("order_order.id", ondelete="CASCADE")
-    )
+    credit_id = Column(UUID, ForeignKey("user_credit.id", ondelete="CASCADE"))
+    order_id = Column(UUID, ForeignKey("order_order.id", ondelete="CASCADE"))
     amount = Column(Numeric(12, 2))
     is_tax = Column(Boolean, default=False)
 
@@ -124,12 +103,8 @@ class Transaction(BaseTimeStamp):
 class ProductLimit(BaseUUID):
     __tablename__ = "user_product_limit"
 
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey("user_project.id", ondelete="CASCADE")
-    )
-    product_id = Column(
-        UUID(as_uuid=True), ForeignKey("catalogue_product.id", ondelete="CASCADE")
-    )
+    project_id = Column(UUID, ForeignKey("user_project.id", ondelete="CASCADE"))
+    product_id = Column(UUID, ForeignKey("catalogue_product.id", ondelete="CASCADE"))
 
     amount = Column(Numeric(12, 2))
     absolute_limit = Column(Boolean, default=False)
