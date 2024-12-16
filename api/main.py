@@ -13,6 +13,8 @@ from api.config import settings
 from api.core.router import router as core_router
 from api.export.router import router as export_router
 from api.order.router import router as order_router
+from api.ticket.router import router as ticket_router
+from api.ticket.router import ws_router
 from api.user.router import router as user_router
 
 logging.config.dictConfig(settings.LOGGING_CONFIG)
@@ -46,9 +48,12 @@ authenticated_router.include_router(catalogue_router)
 authenticated_router.include_router(order_router)
 authenticated_router.include_router(core_router)
 authenticated_router.include_router(export_router)
+authenticated_router.include_router(ticket_router)
+
 
 app.include_router(authenticated_router)
 app.include_router(not_authenticated_router)
+app.include_router(ws_router)
 
 if __name__ == "__main__":
     uvicorn_config = {

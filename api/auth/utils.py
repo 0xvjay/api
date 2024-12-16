@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy import select
@@ -90,3 +90,25 @@ async def get_current_user(db_session: DBSession, token: str = Depends(oauth2_sc
     if user is None:
         raise NotAuthenticated()
     return user
+
+
+async def get_token_from_query(websocket: WebSocket):
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(reason="Token not found")
+        return
+
+    return token
+
+
+async def authenticate_websocket(
+    websocket: WebSocket,
+    db_session: DBSession,
+    token: str = Depends(get_token_from_query),
+):
+    try:
+        user = await get_current_user(db_session=db_session, token=token)
+        return user
+    except Exception:
+        await websocket.close(reason="Invalid Token")
+        return None

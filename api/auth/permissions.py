@@ -195,3 +195,10 @@ class ProjectPermissions:
     read = BasePermissionDependency(PermissionAction.READ, PermissionObject.PROJECT)
     update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.PROJECT)
     delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.PROJECT)
+
+
+class TicketPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.TICKET)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.TICKET)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.TICKET)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.TICKET)

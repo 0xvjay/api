@@ -21,3 +21,4 @@ class PermissionObject(StrEnum):
     EXPORT = "export"
     COMPANY = "company"
     PROJECT = "project"
+    TICKET = "ticket"

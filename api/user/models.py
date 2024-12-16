@@ -12,8 +12,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from api.auth.models import UserGroup, CompanyGroup  # noqa: F401
+from api.auth.models import CompanyGroup, UserGroup  # noqa: F401
+from api.catalogue.models import Product  # noqa: F401
 from api.models import BaseTimeStamp, BaseUUID
+from api.ticket.models import TicketUser  # noqa: F401
 
 
 class AbstractUser(BaseTimeStamp):
@@ -36,6 +38,9 @@ class User(AbstractUser):
     company_id = Column(UUID, ForeignKey("user_company.id", ondelete="CASCADE"))
     company = relationship("Company", back_populates="users")
     groups = relationship("Group", secondary="auth_user_group", back_populates="users")
+    tickets = relationship(
+        "Ticket", secondary="ticket_ticket_user", back_populates="users"
+    )
 
 
 class Company(AbstractUser):
