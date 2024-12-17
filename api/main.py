@@ -1,4 +1,5 @@
 import logging.config
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI
@@ -10,6 +11,7 @@ from api.auth.router import not_authenticated_router
 from api.auth.router import router as auth_router
 from api.catalogue.router import router as catalogue_router
 from api.config import settings
+from api.core.cache import RedisCache
 from api.core.router import router as core_router
 from api.export.router import router as export_router
 from api.order.router import router as order_router
@@ -20,7 +22,14 @@ from api.user.router import router as user_router
 logging.config.dictConfig(settings.LOGGING_CONFIG)
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.cache = RedisCache(settings.REDIS_URL)
+    yield
+    await app.state.cache.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

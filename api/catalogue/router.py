@@ -10,6 +10,7 @@ from api.auth.permissions import (
     SubCategoryPermissions,
 )
 from api.catalogue.service import category_crud, product_crud, sub_category_crud
+from api.core.cache import cache_response
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 
@@ -45,6 +46,7 @@ router = APIRouter(tags=["catalogue"])
     response_model=List[CategoryOutSchema],
     dependencies=[Depends(CategoryPermissions.read)],
 )
+@cache_response(expire=1800, prefix="categories")
 async def read_categories(request: Request, db_session: DBSession):
     try:
         result = await category_crud.list(request=request, db_session=db_session)
@@ -165,6 +167,7 @@ async def remove_category(request: Request, db_session: DBSession, category_id: 
     response_model=List[ProductOutMinimalSchema],
     dependencies=[Depends(ProductPermissions.read)],
 )
+@cache_response(expire=1800, prefix="products")
 async def read_products(request: Request, db_session: DBSession):
     try:
         result = await product_crud.list(request=request, db_session=db_session)
@@ -285,6 +288,7 @@ async def remove_product(request: Request, db_session: DBSession, product_id: UU
     response_model=List[SubCategoryOutMinimalSchema],
     dependencies=[Depends(SubCategoryPermissions.read)],
 )
+@cache_response(expire=1800, prefix="sub_categories")
 async def read_sub_categories(request: Request, db_session: DBSession):
     try:
         result = await sub_category_crud.list(request=request, db_session=db_session)

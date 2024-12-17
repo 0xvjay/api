@@ -1,10 +1,10 @@
 import os
+from typing import Sequence
+from urllib.parse import quote
 
 from dotenv import load_dotenv
-from typing import Sequence
-from pydantic_settings import BaseSettings
-from urllib.parse import quote
 from pydantic import DirectoryPath
+from pydantic_settings import BaseSettings
 
 load_dotenv()
 
@@ -23,6 +23,8 @@ class DBConfig(BaseSettings):
 
 class Config(BaseSettings):
     APP_VERSION: str = "1.0"
+
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
