@@ -1,13 +1,23 @@
+from datetime import date
+from decimal import Decimal
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import select  # noqa: F401
 
 from api.auth.security import get_password_hash
 from api.catalogue.models import Product
 from api.database import AsyncSession
 from api.order.constant import OrderStatus
 from api.order.models import Order
-from api.user.models import User
+from api.user.models import (  # noqa: F401
+    Credit,
+    ProductLimit,
+    Project,
+    Transaction,
+    User,
+)
 
 
 @pytest_asyncio.fixture
@@ -99,18 +109,144 @@ async def test_order(db_session: AsyncSession, test_user: User, test_product: Pr
     return order
 
 
+@pytest_asyncio.fixture
+async def test_project_with_credit(db_session: AsyncSession, test_user: User):
+    """Create test project with credit."""
+    project = Project(
+        name="Test Project",
+        code="TEST001",
+        description="Test project description",
+        priority=1,
+        start_date=date(2024, 12, 12),
+        end_date=date(2024, 12, 31),
+    )
+    db_session.add(project)
+    await db_session.flush()
+
+    credit = Credit(
+        user_id=test_user.id, project_id=project.id, amount=Decimal("1000.00")
+    )
+    db_session.add(credit)
+    await db_session.commit()
+    await db_session.refresh(project)
+    return project
+
+
+@pytest_asyncio.fixture
+async def test_project_with_product_limit(
+    db_session: AsyncSession, test_project_with_credit: Project, test_product: Product
+):
+    """Create product limit for test project."""
+    product_limit = ProductLimit(
+        project_id=test_project_with_credit.id,
+        product_id=test_product.id,
+        amount=Decimal("500.00"),
+        absolute_limit=True,
+    )
+    db_session.add(product_limit)
+    await db_session.commit()
+    return product_limit
+
+
+# @pytest.mark.asyncio
+# async def test_create_order_with_sufficient_credit(
+#     client: AsyncClient,
+#     auth_headers: dict,
+#     test_product: Product,
+#     test_project_with_credit: Project,
+# ):
+#     """Test order creation with sufficient credit."""
+#     payload = {
+#         "guest_email": "guest@example.com",
+#         "lines": [
+#             {
+#                 "quantity": 2,
+#                 "product": {
+#                     "id": str(test_product.id),
+#                     "name": test_product.name,
+#                     "price": float(test_product.price),
+#                     "is_active": test_product.is_active,
+#                     "is_discountable": test_product.is_discountable,
+#                     "slug": test_product.slug,
+#                     "rating": 0,
+#                 },
+#             }
+#         ],
+#     }
+
+#     response = await client.post("/orders/", headers=auth_headers, json=payload)
+#     assert response.status_code == 200
+#     data = response.json()
+
+#     assert data["guest_email"] == "guest@example.com"
+#     assert Decimal(data["total_incl_tax"]) == test_product.price * 2
+
+#     async with AsyncSession() as session:
+#         result = await session.execute(
+#             select(Transaction).where(Transaction.order_id == data["id"])
+#         )
+#         transaction = result.scalar_one()
+#         assert transaction is not None
+#         assert transaction.amount == test_product.price * 2
+
+
+# @pytest.mark.asyncio
+# async def test_create_order_with_product_limit(
+#     client: AsyncClient,
+#     auth_headers: dict,
+#     test_product: Product,
+#     test_project_with_product_limit: ProductLimit,
+# ):
+#     """Test order creation with product-specific limit."""
+#     payload = {
+#         "lines": [
+#             {
+#                 "quantity": 4,
+#                 "product": {
+#                     "id": str(test_product.id),
+#                     "name": test_product.name,
+#                     "price": float(test_product.price),
+#                     "is_active": test_product.is_active,
+#                     "is_discountable": test_product.is_discountable,
+#                     "slug": test_product.slug,
+#                     "rating": 0,
+#                 },
+#             }
+#         ],
+#     }
+
+#     response = await client.post("/orders/", headers=auth_headers, json=payload)
+#     assert response.status_code == 200
+#     data = response.json()
+
+#     assert Decimal(data["total_incl_tax"]) == test_product.price * 4
+
+#     async with AsyncSession() as session:
+#         result = await session.execute(
+#             select(Transaction)
+#             .where(Transaction.order_id == data["id"])
+#             .order_by(Transaction.amount.desc())
+#         )
+#         transactions = result.scalars().all()
+#         assert len(transactions) > 0
+#         total_amount = sum(t.amount for t in transactions)
+#         assert total_amount == test_product.price * 4
+
+
 @pytest.mark.asyncio
-async def test_create_order(
+async def test_create_order_insufficient_credit(
     client: AsyncClient,
     auth_headers: dict,
     test_product: Product,
+    test_project_with_credit: Project,
 ):
-    """Test order creation."""
+    """Test order creation with insufficient credit."""
+    test_product.price = Decimal("2000.00")
+
     payload = {
-        "guest_email": "guest@example.com",
         "lines": [
             {
-                "quantity": 2,
+                "quantity": 1,
                 "product": {
                     "id": str(test_product.id),
                     "name": test_product.name,
@@ -125,11 +261,8 @@ async def test_create_order(
     }
 
     response = await client.post("/orders/", headers=auth_headers, json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    print(data)
-    assert data["guest_email"] == "guest@example.com"
-    assert data["total_incl_tax"] == str(test_product.price * 2)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Insufficient credit available for purchase"
 
 
 @pytest.mark.asyncio

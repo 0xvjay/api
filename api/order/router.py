@@ -8,7 +8,7 @@ from api.auth.permissions import OrderPermissions
 from api.database import DBSession
 from api.exceptions import DetailedHTTPException
 
-from .exceptions import OrderNotFound
+from .exceptions import InsufficientCredit, OrderNotFound
 from .schemas import (
     OrderCreateSchema,
     OrderOutMinimalSchema,
@@ -76,6 +76,8 @@ async def add_order(request: Request, db_session: DBSession, order: OrderCreateS
             request=request, db_session=db_session, order=order
         )
         return result
+    except InsufficientCredit:
+        raise
     except Exception as e:
         logger.exception(f"Failed to create order: {str(e)}")
         raise DetailedHTTPException()
