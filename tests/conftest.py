@@ -1,5 +1,6 @@
 import asyncio
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -72,6 +73,13 @@ async def override_get_db():
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Get test client."""
     app.dependency_overrides[get_db] = override_get_db
+
+    mock_cache = AsyncMock()
+    mock_cache.get.return_value = None
+    mock_cache.set.return_value = None
+    mock_cache.delete.return_value = None
+    mock_cache.close.return_value = None
+    app.state.cache = mock_cache
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
