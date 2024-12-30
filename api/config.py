@@ -37,6 +37,12 @@ class Config(BaseSettings):
     CORS_ORIGINS_REGEX: str | None = None
     CORS_HEADERS: Sequence[str] = [""]
 
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD")
+    MAIL_FROM: str = os.getenv("MAIL_FROM")
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER")
+    MAIL_PORT: int = 587
+
     BASE_DIR: DirectoryPath = os.path.dirname(
         os.path.dirname(os.path.realpath(__file__))
     )

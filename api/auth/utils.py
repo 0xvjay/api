@@ -6,6 +6,7 @@ from fastapi import Depends, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from api.config import settings
@@ -49,7 +50,7 @@ def create_refresh_token(subject: str | Any, expires_delta: int = None) -> str:
     return encoded_jwt
 
 
-async def authenticate_user(db_session: DBSession, email: str, password: str):
+async def authenticate_user(db_session: AsyncSession, email: str, password: str):
     user = await user_crud.get_by_email_or_username(db_session=db_session, email=email)
     if not user:
         user = await company_crud.get_by_email(db_session=db_session, email=email)

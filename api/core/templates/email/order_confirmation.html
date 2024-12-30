@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Order Confirmation</h1>
+    <p>Thank you for your order!</p>
+    <p>Order ID: {{order_data.id}}</p>
+    <p>Total: {{order_data.total_incl_tax}}</p>
+{% endblock %}
