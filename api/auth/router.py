@@ -24,7 +24,7 @@ from .schemas import (
 from .service import get_permissions, group_crud
 from .utils import authenticate_user, create_access_token, create_refresh_token
 
-router = APIRouter()
+router = APIRouter(tags=["groups"])
 logger = logging.getLogger(__name__)
 
 

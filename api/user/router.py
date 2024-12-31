@@ -52,6 +52,7 @@ logger = logging.getLogger(__name__)
     response_model=UserOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(UserPermissions.create)],
+    tags=["users"],
 )
 async def add_user(request: Request, db_session: DBSession, user: UserCreateSchema):
     try:
@@ -75,6 +76,7 @@ async def add_user(request: Request, db_session: DBSession, user: UserCreateSche
     "/users/",
     response_model=List[UserOutMinimalSchema],
     dependencies=[Depends(UserPermissions.read)],
+    tags=["users"],
 )
 async def read_users(
     request: Request,
@@ -95,7 +97,7 @@ async def read_users(
         raise DetailedHTTPException()
 
 
-@router.get("/users/{user_id}", response_model=UserOutSchema)
+@router.get("/users/{user_id}", response_model=UserOutSchema, tags=["users"])
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER)
 async def read_user(request: Request, db_session: DBSession, user_id: UUID4):
     try:
@@ -110,7 +112,7 @@ async def read_user(request: Request, db_session: DBSession, user_id: UUID4):
         raise DetailedHTTPException()
 
 
-@router.put("/users/{user_id}", response_model=UserOutMinimalSchema)
+@router.put("/users/{user_id}", response_model=UserOutMinimalSchema, tags=["users"])
 @allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER)
 async def edit_user(
     request: Request, db_session: DBSession, user: UserUpdateSchema, user_id: UUID4
@@ -142,6 +144,7 @@ async def edit_user(
     "/users/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(UserPermissions.delete)],
+    tags=["users"],
 )
 async def remove_user(request: Request, db_session: DBSession, user_id: UUID4):
     try:
@@ -160,7 +163,9 @@ async def remove_user(request: Request, db_session: DBSession, user_id: UUID4):
 
 
 @router.get(
-    "/users/{user_id}/user_addresses/", response_model=List[UserAddressOutSchema]
+    "/users/{user_id}/user_addresses/",
+    response_model=List[UserAddressOutSchema],
+    tags=["user_addresses"],
 )
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER_ADDRESS)
 async def read_user_addresses(request: Request, db_session: DBSession, user_id: UUID4):
@@ -177,6 +182,7 @@ async def read_user_addresses(request: Request, db_session: DBSession, user_id: 
 @router.get(
     "/users/{user_id}/user_addresses/{user_address_id}",
     response_model=UserAddressOutSchema,
+    tags=["user_addresses"],
 )
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.USER_ADDRESS)
 async def read_user_address(
@@ -202,6 +208,7 @@ async def read_user_address(
     "/users/{user_id}/user_addresses/",
     response_model=UserAddressOutSchema,
     status_code=status.HTTP_201_CREATED,
+    tags=["user_addresses"],
 )
 @allow_self_access("user_id", PermissionAction.CREATE, PermissionObject.USER_ADDRESS)
 async def add_user_address(
@@ -223,6 +230,7 @@ async def add_user_address(
 @router.put(
     "/users/{user_id}/user_addresses/{user_address_id}",
     response_model=UserAddressOutSchema,
+    tags=["user_addresses"],
 )
 @allow_self_access("user_id", PermissionAction.UPDATE, PermissionObject.USER_ADDRESS)
 async def edit_user_address(
@@ -257,6 +265,7 @@ async def edit_user_address(
 @router.delete(
     "/users/{user_id}/user_addresses/{user_address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    tags=["user_addresses"],
 )
 @allow_self_access("user_id", PermissionAction.DELETE, PermissionObject.USER_ADDRESS)
 async def remove_user_address(
@@ -279,7 +288,11 @@ async def remove_user_address(
         raise DetailedHTTPException()
 
 
-@router.get("/users/{user_id}/orders/", response_model=List[OrderOutMinimalSchema])
+@router.get(
+    "/users/{user_id}/orders/",
+    response_model=List[OrderOutMinimalSchema],
+    tags=["users"],
+)
 @allow_self_access("user_id", PermissionAction.READ, PermissionObject.ORDER)
 async def read_user_orders(request: Request, db_session: DBSession, user_id: UUID4):
     try:
@@ -296,6 +309,7 @@ async def read_user_orders(request: Request, db_session: DBSession, user_id: UUI
     "/companies/",
     response_model=List[CompanyOutMinimalSchema],
     dependencies=[Depends(CompanyPermissions.read)],
+    tags=["companies"],
 )
 async def read_companies(
     request: Request,
@@ -320,6 +334,7 @@ async def read_companies(
     "/companies/{company_id}",
     response_model=CompanyOutSchema,
     dependencies=[Depends(CompanyPermissions.read)],
+    tags=["companies"],
 )
 async def read_company(request: Request, db_session: DBSession, company_id: UUID4):
     try:
@@ -341,6 +356,7 @@ async def read_company(request: Request, db_session: DBSession, company_id: UUID
     response_model=CompanyOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(CompanyPermissions.create)],
+    tags=["companies"],
 )
 async def add_company(
     request: Request, db_session: DBSession, company: CompanyCreateSchema
@@ -359,6 +375,7 @@ async def add_company(
     "/companies/{company_id}",
     response_model=CompanyOutSchema,
     dependencies=[Depends(CompanyPermissions.update)],
+    tags=["companies"],
 )
 async def edit_company(
     request: Request,
@@ -390,6 +407,7 @@ async def edit_company(
     "/companies/{company_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(CompanyPermissions.delete)],
+    tags=["companies"],
 )
 async def remove_company(request: Request, db_session: DBSession, company_id: UUID4):
     try:
@@ -413,6 +431,7 @@ async def remove_company(request: Request, db_session: DBSession, company_id: UU
     "/projects/",
     response_model=List[ProjectOutMinimalSchema],
     dependencies=[Depends(ProjectPermissions.read)],
+    tags=["projects"],
 )
 async def read_projects(
     request: Request,
@@ -437,6 +456,7 @@ async def read_projects(
     "/projects/{project_id}",
     response_model=ProjectOutSchema,
     dependencies=[Depends(ProjectPermissions.read)],
+    tags=["projects"],
 )
 async def read_project(request: Request, db_session: DBSession, project_id: UUID4):
     try:
@@ -458,6 +478,7 @@ async def read_project(request: Request, db_session: DBSession, project_id: UUID
     response_model=ProjectOutMinimalSchema,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(ProjectPermissions.create)],
+    tags=["projects"],
 )
 async def add_project(
     request: Request, db_session: DBSession, project: ProjectCreateSchema
@@ -476,6 +497,7 @@ async def add_project(
     "/projects/{project_id}",
     response_model=ProjectOutMinimalSchema,
     dependencies=[Depends(ProjectPermissions.update)],
+    tags=["projects"],
 )
 async def edit_project(
     request: Request,
@@ -507,6 +529,7 @@ async def edit_project(
     "/projects/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(ProjectPermissions.delete)],
+    tags=["projects"],
 )
 async def remove_project(request: Request, db_session: DBSession, project_id: UUID4):
     try:
