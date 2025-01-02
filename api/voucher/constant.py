@@ -1,0 +1,7 @@
+from enum import StrEnum
+
+
+class USAGE_CHOICES(StrEnum):
+    SINGLE_USE = "SINGLE_USE"
+    MULTI_USE = "MULTI_USE"
+    ONCE_PER_CUSTOMER = "ONCE_PER_CUSTOMER"

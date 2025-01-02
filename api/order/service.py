@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 
 from api.core.crud import CRUDBase
 from api.user.models import Credit, ProductLimit, Project, Transaction, User
+from api.voucher.models import VoucherApplication
 
 from .constant import OrderStatus
 from .exceptions import InsufficientCredit
@@ -75,6 +76,21 @@ class CRUDOrder(CRUDBase[Order, OrderCreateSchema, OrderUpdateSchema]):
             )
         )
         return result.unique().scalar_one_or_none()
+
+    async def record_voucher_usage(
+        self,
+        db_session: AsyncSession,
+        order_id: UUID4,
+        user_id: UUID4,
+        voucher_id: UUID4,
+    ) -> None:
+        db_application = VoucherApplication(
+            voucher_id=voucher_id, order_id=order_id, user_id=user_id
+        )
+        db_session.add(db_application)
+
+        await db_session.commit()
+        return
 
     async def create(
         self, request: Request, db_session: AsyncSession, order: OrderCreateSchema

@@ -202,3 +202,23 @@ class TicketPermissions:
     read = BasePermissionDependency(PermissionAction.READ, PermissionObject.TICKET)
     update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.TICKET)
     delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.TICKET)
+
+
+class VoucherPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.VOUCHER)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.VOUCHER)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.VOUCHER)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.VOUCHER)
+
+
+class ReviewPermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.REVIEW)
+    read = BasePermissionDependency(PermissionAction.READ, PermissionObject.REVIEW)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.REVIEW)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.REVIEW)
+
+
+class VotePermissions:
+    create = BasePermissionDependency(PermissionAction.CREATE, PermissionObject.VOTE)
+    update = BasePermissionDependency(PermissionAction.UPDATE, PermissionObject.VOTE)
+    delete = BasePermissionDependency(PermissionAction.DELETE, PermissionObject.VOTE)

@@ -15,9 +15,11 @@ from api.core.cache import RedisCache
 from api.core.router import router as core_router
 from api.export.router import router as export_router
 from api.order.router import router as order_router
+from api.review.router import router as review_router
 from api.ticket.router import router as ticket_router
 from api.ticket.router import ws_router
 from api.user.router import router as user_router
+from api.voucher.router import router as voucher_router
 
 logging.config.dictConfig(settings.LOGGING_CONFIG)
 
@@ -58,6 +60,8 @@ authenticated_router.include_router(order_router)
 authenticated_router.include_router(core_router)
 authenticated_router.include_router(export_router)
 authenticated_router.include_router(ticket_router)
+authenticated_router.include_router(voucher_router)
+authenticated_router.include_router(review_router)
 
 
 app.include_router(authenticated_router)

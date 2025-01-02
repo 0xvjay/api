@@ -119,7 +119,7 @@ async def edit_category(
         )
         if db_category is None:
             raise CategoryNotFound()
-        if db_category != category.name:
+        if db_category.name != category.name:
             existing_category = await category_crud.get_by_name(
                 db_session=db_session, name=category.name
             )

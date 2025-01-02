@@ -22,3 +22,6 @@ class PermissionObject(StrEnum):
     COMPANY = "company"
     PROJECT = "project"
     TICKET = "ticket"
+    VOUCHER = "voucher"
+    REVIEW = "review"
+    VOTE = "vote"

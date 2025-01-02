@@ -14,8 +14,10 @@ from api.core import models as core_models  # noqa: F401
 from api.database import Base
 from api.export import models as export_models  # noqa: F401
 from api.order import models as order_models  # noqa: F401
+from api.review import models as review_models  # noqa: F401
 from api.ticket import models as ticket_models  # noqa: F401
 from api.user import models as user_models  # noqa: F401
+from api.voucher import models as voucher_models  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
